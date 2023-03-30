@@ -12,6 +12,8 @@ public class FeedResource implements FeedsService {
 
     // Feeds data structure
 
+    // Follow data structure
+
     public FeedResource() {}
 
     @Override

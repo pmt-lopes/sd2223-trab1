@@ -1,1 +1,12 @@
-# TO BE COMPLETED
+USERS_REST_SERVER_MAINCLASS=classe do servidor Users REST (e.g. sd2223.tp1.server.RESTUsersServer)
+USERS_REST_PORT=porto do servidor Users REST (e.g. 8080)
+USERS_SOAP_SERVER_MAINCLASS=classe do servidor Users SOAP (e.g. sd2223.tp1.server.SOAPUsersServer)
+USERS_SOAP_PORT=porto do servidor Users SOAP (e.g. 8080)
+USERS_EXTRA_ARGS=parâmetro adicional a passar ao servidor Users, se algum
+FEEDS_REST_SERVER_MAINCLASS=classe do servidor Feeds REST (e.g. sd2223.tp1.server.RESTFeedsServer)
+FEEDS_REST_PORT=porto do servidor Feeds REST (e.g. 8080)
+FEEDS_SOAP_SERVER_MAINCLASS=classe do servidor Feeds SOAP (e.g. sd2223.tp1.server.SOAPFeedsServer)
+FEEDS_SOAP_PORT=porto do servidor Feeds SOAP (e.g. 8080)
+FEEDS_EXTRA_ARGS=parâmetro adicional a passar ao servidor Feeds, se algum
+DISCOVERY_MULTICAST_IP=endereço multicast para descoberta (e.g. 226.226.226.226)
+DISCOVERY_MULTICAST_PORT=porto para descoberta (e.g. 2266)
