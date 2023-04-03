@@ -1,23 +1,36 @@
-package sd2223.trab1.api.resources;
+package sd2223.trab1.servers.rest.feeds;
 
 import sd2223.trab1.api.Message;
+import sd2223.trab1.api.User;
 import sd2223.trab1.api.rest.FeedsService;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
-public class FeedResource implements FeedsService {
+public class RESTFeedResource implements FeedsService {
 
-    private static Logger Log = Logger.getLogger(FeedResource.class.getName());
+    private static Logger Log = Logger.getLogger(RESTFeedResource.class.getName());
 
     // Feeds data structure
+    private final Map<String, Set<Message>> feeds = new HashMap();
 
     // Follow data structure
+    private final Map<String, Set<User>> follows = new HashMap();
 
-    public FeedResource() {}
+    public RESTFeedResource() {}
 
     @Override
     public long postMessage(String user, String pwd, Message msg) {
+
+        // validate user
+
+        // post message in personal feed
+
+        // send to other domains?
+
         return 0;
     }
 

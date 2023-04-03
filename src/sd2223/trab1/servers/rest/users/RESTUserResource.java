@@ -1,4 +1,4 @@
-package sd2223.trab1.api.resources;
+package sd2223.trab1.servers.rest.users;
 
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response.Status;
@@ -11,13 +11,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-public class UserResource implements UsersService {
+public class RESTUserResource implements UsersService {
 
     private final Map<String,User> users = new HashMap<>();
 
-    private static Logger Log = Logger.getLogger(UserResource.class.getName());
+    private static Logger Log = Logger.getLogger(RESTUserResource.class.getName());
 
-    public UserResource() {}
+    public RESTUserResource() {}
 
 
     @Override
