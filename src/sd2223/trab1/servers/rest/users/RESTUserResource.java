@@ -1,5 +1,6 @@
 package sd2223.trab1.servers.rest.users;
 
+import jakarta.inject.Singleton;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response.Status;
 import sd2223.trab1.api.User;
@@ -16,7 +17,7 @@ public class RESTUserResource implements UsersService {
     private final Map<String,User> users = new HashMap<>();
 
     private static Logger Log = Logger.getLogger(RESTUserResource.class.getName());
-
+    @Singleton
     public RESTUserResource() {}
 
 
