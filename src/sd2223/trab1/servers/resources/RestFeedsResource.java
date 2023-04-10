@@ -6,6 +6,10 @@ import sd2223.trab1.api.rest.FeedsService;
 import java.util.List;
 
 public class RestFeedsResource implements FeedsService {
+
+    // Feeds data structure
+    // Follows data structure
+
     @Override
     public long postMessage(String user, String pwd, Message msg) {
         return 0;
