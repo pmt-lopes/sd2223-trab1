@@ -12,9 +12,6 @@ import sd2223.trab1.api.Message;
 import sd2223.trab1.api.User;
 import sd2223.trab1.api.rest.FeedsService;
 import sd2223.trab1.api.rest.UsersService;
-import sd2223.trab1.servers.rest.users.RESTUserResource;
-import sd2223.trab1.servers.rest.users.RESTUsersServer;
-
 
 import java.net.URI;
 import java.util.*;
@@ -41,7 +38,7 @@ public class RESTFeedResource implements FeedsService {
         if(user==null||pwd == null)
             throw new WebApplicationException(Response.Status.BAD_REQUEST);
         String[] userAux = user.split("@");
-        URI[] uri = discovery.knownUrisOf(RESTUsersServer.SERVICE, 1);
+        URI[] uri = discovery.knownUrisOf("users." + userAux[1], 1);
         WebTarget target = client.target(uri[0]).path(UsersService.PATH);
         Response r = target.path(userAux[1])
                 .queryParam(UsersService.PWD, pwd).request()
@@ -63,7 +60,7 @@ public class RESTFeedResource implements FeedsService {
     @Override
     public void removeFromPersonalFeed(String user, long mid, String pwd) {
         String[] userAux = user.split("@");
-        URI[] uri = discovery.knownUrisOf(RESTUsersServer.SERVICE, 1);
+        URI[] uri = discovery.knownUrisOf("users." + userAux[1], 1);
         WebTarget target = client.target(uri[0]).path(UsersService.PATH);
         Response r = target.path(userAux[1])
                 .queryParam(UsersService.PWD, pwd).request()
