@@ -79,6 +79,7 @@ public class RESTFeedResource implements FeedsService {
 
     @Override
     public Message getMessage(String user, long mid) {
+        String[] userAux = user.split("@");
 
         //TODO May be a remote user
         if(!feeds.containsKey(user))
@@ -90,11 +91,20 @@ public class RESTFeedResource implements FeedsService {
                 return message;
             }
         }
-        throw new WebApplicationException(Response.Status.NOT_FOUND);
+        discovery.knownUrisOf(userAux[1],1);
+        URI[] uri = discovery.knownUrisOf(RESTUsersServer.SERVICE, 1);
+        WebTarget target = client.target(uri[0]).path(UsersService.PATH);
+        Response r = target.path(userAux[0])
+                .queryParam(FeedsService.MID, mid)
+                .request().get();
+                Message msg = r.readEntity(Message.class);
+                return msg;
     }
 
     @Override
     public List<Message> getMessages(String user, long time) {
+        String[] userAux = user.split("@");
+
         //TODO May be a remote user
         if(!feeds.containsKey(user))
             throw new WebApplicationException(Response.Status.NOT_FOUND);
