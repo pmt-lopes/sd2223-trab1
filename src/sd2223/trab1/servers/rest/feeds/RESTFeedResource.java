@@ -12,7 +12,6 @@ import sd2223.trab1.api.Message;
 import sd2223.trab1.api.User;
 import sd2223.trab1.api.rest.FeedsService;
 import sd2223.trab1.api.rest.UsersService;
-import sd2223.trab1.servers.rest.users.RESTUserResource;
 import sd2223.trab1.servers.rest.users.RESTUsersServer;
 
 
@@ -36,27 +35,23 @@ public class RESTFeedResource implements FeedsService {
 
     @Override
     public long postMessage(String user, String pwd, Message msg) {
-
+        String userAux = user.split("@")[1];
         // validate user
-        if(user==null||pwd == null)
+        if(userAux==null||pwd == null)
             throw new WebApplicationException(Response.Status.BAD_REQUEST);
-        String[] userAux = user.split("@");
         URI[] uri = discovery.knownUrisOf(RESTUsersServer.SERVICE, 1);
         WebTarget target = client.target(uri[0]).path(UsersService.PATH);
-        Response r = target.path(userAux[1])
+        Response r = target.path(userAux)
                 .queryParam(UsersService.PWD, pwd).request()
                 .accept(MediaType.APPLICATION_JSON)
                 .get();
         User us =r.readEntity(User.class);
-        if(!follows.containsKey(user)|| !us.getPwd().equals(pwd) )
+        if(!follows.containsKey(userAux)|| !us.getPwd().equals(pwd) )
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         if(!us.getPwd().equals(pwd))
             throw new WebApplicationException(Response.Status.FORBIDDEN);
         // post message in personal feed
         feeds.get(user).add(msg);
-        /*TODO*/
-        // send to other domains?
-
         return msg.getId();
     }
 
@@ -103,29 +98,59 @@ public class RESTFeedResource implements FeedsService {
         //TODO May be a remote user
         if(!feeds.containsKey(user))
             throw new WebApplicationException(Response.Status.NOT_FOUND);
-        Set<Message> m = feeds.get(user);
-        List<Message> l =new ArrayList<Message>(m);
+        List<Message> l =new ArrayList<Message>();
+       for( Message m : feeds.get(user))
+           if (m.getCreationTime()<time)
+               l.add(m);
         return l;
     }
 
     @Override
     public void subUser(String user, String userSub, String pwd) {
-    if(user==null|| userSub==null||pwd == null)
-        throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        String[] userAux = userSub.split("@");
+        URI[] uri = discovery.knownUrisOf(RESTUsersServer.SERVICE, 1);
+        WebTarget target = client.target(uri[0]).path(UsersService.PATH);
+        Response r = target.path(userAux[1])
+                .queryParam(UsersService.PWD, pwd).request()
+                .accept(MediaType.APPLICATION_JSON)
+                .get();
+        User us =r.readEntity(User.class);
+    if(us == null|| !follows.containsKey(user))
+        throw new WebApplicationException(Response.Status.NOT_FOUND);
 
-    if(!follows.containsKey(user))
+    if(!us.getPwd().equals(pwd))
         throw new WebApplicationException(Response.Status.FORBIDDEN);
-    follows.get(userSub).add(new User(user, pwd, "", user));
+    follows.get(userSub).add(new User(us.getName(), us.getPwd(), us.getDomain(), us.getDisplayName()));
     }
 
 
     @Override
     public void unsubscribeUser(String user, String userSub, String pwd) {
+        String[] userAux = userSub.split("@");
+        URI[] uri = discovery.knownUrisOf(RESTUsersServer.SERVICE, 1);
+        WebTarget target = client.target(uri[0]).path(UsersService.PATH);
+        Response r = target.path(userAux[1])
+                .queryParam(UsersService.PWD, pwd).request()
+                .accept(MediaType.APPLICATION_JSON)
+                .get();
+        User us =r.readEntity(User.class);
+        if(!follows.containsKey(user)|| !follows.get(user).contains(us))
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        if (!pwd.equals(us.getPwd())){
+            throw new WebApplicationException(Response.Status.FORBIDDEN);
+        }
+            follows.get(user).remove(us);
+
 
     }
 
     @Override
     public List<String> listSubs(String user) {
-        return null;
+        if(!follows.containsKey(user))
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        List<String> l = new ArrayList<>();
+        for(User u: follows.get(user))
+            l.add(u.getName());
+       return l;
     }
 }
