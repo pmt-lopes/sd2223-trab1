@@ -7,8 +7,6 @@ import java.util.logging.Logger;
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 import sd2223.trab1.api.Discovery;
-import sd2223.trab1.servers.rest.users.RESTUserResource;
-import sd2223.trab1.servers.rest.users.RESTUsersServer;
 
 public class RESTFeedsServer {
 
@@ -19,18 +17,23 @@ public class RESTFeedsServer {
     }
 
     public static final int PORT = 8080;
-    public static final String SERVICE = "Feeds";
     private static final String SERVER_URI_FMT = "http://%s:%s/rest";
 
     public static void main(String[] args) {
 
+        // Get Discovery Instance
+        Discovery discovery = Discovery.getInstance();
+
         try {
 
-            // Get Discovery Instance
-            Discovery discovery = Discovery.getInstance();
+            if (args.length != 1) {
+                System.err.println("Invalid Argument! Expected: domain");
+                System.exit(0);
+                return;
+            }
 
-            // Get Server Domain
-            String domain = args[0];
+            // Get service name
+            String serviceName = "feeds." + args[0];
 
             ResourceConfig config = new ResourceConfig();
             config.register(RESTFeedResource.class);
@@ -40,13 +43,11 @@ public class RESTFeedsServer {
             String serverURI = String.format(SERVER_URI_FMT, ip, PORT);
             JdkHttpServerFactory.createHttpServer(URI.create(serverURI.replace(ip, "0.0.0.0")), config);
 
-            // Generate ServiceName in format
-            String ServiceName = domain + ":" + SERVICE;
 
             // Announce
-            discovery.announce(ServiceName, serverURI);
+            discovery.announce(serviceName, serverURI);
 
-            Log.info(String.format("%s Server ready @ %s\n", SERVICE, serverURI));
+            Log.info(String.format("%s Server ready @ %s\n", serviceName, serverURI));
 
             // More code can be executed here...
         } catch (Exception e) {

@@ -12,7 +12,7 @@ import sd2223.trab1.api.Message;
 import sd2223.trab1.api.User;
 import sd2223.trab1.api.rest.FeedsService;
 import sd2223.trab1.api.rest.UsersService;
-import sd2223.trab1.servers.rest.users.RESTUsersServer;
+
 
 
 import java.net.URI;
@@ -35,32 +35,35 @@ public class RESTFeedResource implements FeedsService {
 
     @Override
     public long postMessage(String user, String pwd, Message msg) {
-        String userAux = user.split("@")[1];
+
         // validate user
-        if(userAux==null||pwd == null)
+        if(user==null||pwd == null)
             throw new WebApplicationException(Response.Status.BAD_REQUEST);
-        URI[] uri = discovery.knownUrisOf(RESTUsersServer.SERVICE, 1);
+        String[] userAux = user.split("@");
+        URI[] uri = discovery.knownUrisOf("users.", 1);
         WebTarget target = client.target(uri[0]).path(UsersService.PATH);
-        Response r = target.path(userAux)
+        Response r = target.path(userAux[0])
                 .queryParam(UsersService.PWD, pwd).request()
                 .accept(MediaType.APPLICATION_JSON)
                 .get();
         User us =r.readEntity(User.class);
-        if(!follows.containsKey(userAux)|| !us.getPwd().equals(pwd) )
+        if(!follows.containsKey(user)|| !us.getPwd().equals(pwd) )
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         if(!us.getPwd().equals(pwd))
             throw new WebApplicationException(Response.Status.FORBIDDEN);
         // post message in personal feed
         feeds.get(user).add(msg);
+
+
         return msg.getId();
     }
 
     @Override
     public void removeFromPersonalFeed(String user, long mid, String pwd) {
         String[] userAux = user.split("@");
-        URI[] uri = discovery.knownUrisOf(RESTUsersServer.SERVICE, 1);
+        URI[] uri = discovery.knownUrisOf("users.", 1);
         WebTarget target = client.target(uri[0]).path(UsersService.PATH);
-        Response r = target.path(userAux[1])
+        Response r = target.path(userAux[0])
                 .queryParam(UsersService.PWD, pwd).request()
                 .accept(MediaType.APPLICATION_JSON)
                 .get();
@@ -79,7 +82,6 @@ public class RESTFeedResource implements FeedsService {
 
     @Override
     public Message getMessage(String user, long mid) {
-        String[] userAux = user.split("@");
 
         //TODO May be a remote user
         if(!feeds.containsKey(user))
@@ -91,76 +93,60 @@ public class RESTFeedResource implements FeedsService {
                 return message;
             }
         }
-        discovery.knownUrisOf(userAux[1],1);
-        URI[] uri = discovery.knownUrisOf(RESTUsersServer.SERVICE, 1);
-        WebTarget target = client.target(uri[0]).path(UsersService.PATH);
-        Response r = target.path(userAux[0])
-                .queryParam(FeedsService.MID, mid)
-                .request().get();
-                Message msg = r.readEntity(Message.class);
-                return msg;
+        throw new WebApplicationException(Response.Status.NOT_FOUND);
     }
 
     @Override
     public List<Message> getMessages(String user, long time) {
-        String[] userAux = user.split("@");
-
         //TODO May be a remote user
-        if(!feeds.containsKey(user))
+        String[] userAux = user.split("@");
+        if(!feeds.containsKey(userAux[0]))
             throw new WebApplicationException(Response.Status.NOT_FOUND);
-        List<Message> l =new ArrayList<Message>();
-       for( Message m : feeds.get(user))
-           if (m.getCreationTime()<time)
-               l.add(m);
+        List<Message> l = new ArrayList<>();
+         for(Message m : feeds.get(user))
+             if(m.getCreationTime()<time)
+                l.add(m);
         return l;
     }
 
     @Override
     public void subUser(String user, String userSub, String pwd) {
-        String[] userAux = userSub.split("@");
-        URI[] uri = discovery.knownUrisOf(RESTUsersServer.SERVICE, 1);
+        String[] userAux = user.split("@");
+        URI[] uri = discovery.knownUrisOf("users.", 1);
         WebTarget target = client.target(uri[0]).path(UsersService.PATH);
-        Response r = target.path(userAux[1])
+        Response r = target.path(userSub)
                 .queryParam(UsersService.PWD, pwd).request()
                 .accept(MediaType.APPLICATION_JSON)
                 .get();
         User us =r.readEntity(User.class);
-    if(us == null|| !follows.containsKey(user))
-        throw new WebApplicationException(Response.Status.NOT_FOUND);
-
+        if(!follows.containsKey(userAux[0])||us == null)
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
     if(!us.getPwd().equals(pwd))
         throw new WebApplicationException(Response.Status.FORBIDDEN);
-    follows.get(userSub).add(new User(us.getName(), us.getPwd(), us.getDomain(), us.getDisplayName()));
+    follows.get(userAux[0]).add(us);
     }
 
 
     @Override
     public void unsubscribeUser(String user, String userSub, String pwd) {
-        String[] userAux = userSub.split("@");
-        URI[] uri = discovery.knownUrisOf(RESTUsersServer.SERVICE, 1);
+        String[] userAux = user.split("@");
+        URI[] uri = discovery.knownUrisOf("users.", 1);
         WebTarget target = client.target(uri[0]).path(UsersService.PATH);
-        Response r = target.path(userAux[1])
+        Response r = target.path(userSub)
                 .queryParam(UsersService.PWD, pwd).request()
                 .accept(MediaType.APPLICATION_JSON)
                 .get();
         User us =r.readEntity(User.class);
-        if(!follows.containsKey(user)|| !follows.get(user).contains(us))
+        if(!follows.containsKey(userAux[0])||us == null)
             throw new WebApplicationException(Response.Status.NOT_FOUND);
-        if (!pwd.equals(us.getPwd())){
-            throw new WebApplicationException(Response.Status.FORBIDDEN);
-        }
-            follows.get(user).remove(us);
-
-
+        if(!pwd.equals(us.getPwd()))
+        throw new WebApplicationException(Response.Status.FORBIDDEN);
+        follows.get(userAux[0]).remove(us);
     }
 
     @Override
     public List<String> listSubs(String user) {
-        if(!follows.containsKey(user))
-            throw new WebApplicationException(Response.Status.NOT_FOUND);
-        List<String> l = new ArrayList<>();
-        for(User u: follows.get(user))
-            l.add(u.getName());
-       return l;
+        List<String> s = new ArrayList<>();
+
     }
 }
