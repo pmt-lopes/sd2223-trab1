@@ -70,7 +70,7 @@ public class RESTUserResource implements UsersService {
         // TODO Complete method
 
         // Check if parameters are valid
-        if(name == null || pwd == null || user == null) {
+        if(!name.equals(user.getName())) {
             Log.info("Null parameter.");
             throw new WebApplicationException( Status.BAD_REQUEST );
         }
@@ -88,7 +88,12 @@ public class RESTUserResource implements UsersService {
             Log.info("Password is incorrect.");
             throw new WebApplicationException( Status.FORBIDDEN );
         }
-
+        if(user.getPwd()==null)
+            user.setPwd(u.getPwd());
+        if(user.getDomain()==null)
+            user.setDomain(u.getDomain());
+        if(user.getDisplayName()==null)
+            user.setDisplayName(u.getDisplayName());
         // Update user
         users.put(name, user);
 

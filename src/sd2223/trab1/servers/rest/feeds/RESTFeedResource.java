@@ -32,7 +32,14 @@ public class RESTFeedResource implements FeedsService {
     private ClientConfig config = new ClientConfig();
     private Client client = ClientBuilder.newClient(config);
     public RESTFeedResource() {}
-
+    /*Esta info foi adicionado ao enunciado do trabalho, ms fica aqui também,
+    com um pouco mais de detalhe: a partir da versão 4.0
+    foi adicionado um segundo parâmetro quando se arranca o servidor
+    (args[1]) - esse parâmetro é um número inteiro, diferente para cada servidor.
+    Podem usar este parâmetro para garantir que os identificadores das mensagens geradas
+    em diferentes servidores é unico - e.g. sendo base esse valor
+    e num_seq um número de sequência num servidor,
+    num_sql * 256 + base será um identificador único*/
     @Override
     public long postMessage(String user, String pwd, Message msg) {
 
@@ -52,6 +59,7 @@ public class RESTFeedResource implements FeedsService {
         if(!us.getPwd().equals(pwd))
             throw new WebApplicationException(Response.Status.FORBIDDEN);
         // post message in personal feed
+
         feeds.get(user).add(msg);
 
 
