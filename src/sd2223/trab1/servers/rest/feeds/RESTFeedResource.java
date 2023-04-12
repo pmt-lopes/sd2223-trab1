@@ -73,8 +73,8 @@ public class RESTFeedResource implements FeedsService {
         Set<Message> m = feeds.get(user);
         for (Message message : m) {
             if(message.getId()== mid){
-               feeds.remove(message);
-               return;
+                feeds.remove(message);
+                return;
             }
         }
         throw new WebApplicationException(Response.Status.NOT_FOUND);
@@ -103,8 +103,8 @@ public class RESTFeedResource implements FeedsService {
         if(!feeds.containsKey(userAux[0]))
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         List<Message> l = new ArrayList<>();
-         for(Message m : feeds.get(user))
-             if(m.getCreationTime()<time)
+        for(Message m : feeds.get(user))
+            if(m.getCreationTime()<time)
                 l.add(m);
         return l;
     }
@@ -121,9 +121,9 @@ public class RESTFeedResource implements FeedsService {
         User us =r.readEntity(User.class);
         if(!follows.containsKey(userAux[0])||us == null)
             throw new WebApplicationException(Response.Status.NOT_FOUND);
-    if(!us.getPwd().equals(pwd))
-        throw new WebApplicationException(Response.Status.FORBIDDEN);
-    follows.get(userAux[0]).add(us);
+        if(!us.getPwd().equals(pwd))
+            throw new WebApplicationException(Response.Status.FORBIDDEN);
+        follows.get(userAux[0]).add(us);
     }
 
 
@@ -140,13 +140,18 @@ public class RESTFeedResource implements FeedsService {
         if(!follows.containsKey(userAux[0])||us == null)
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         if(!pwd.equals(us.getPwd()))
-        throw new WebApplicationException(Response.Status.FORBIDDEN);
+            throw new WebApplicationException(Response.Status.FORBIDDEN);
         follows.get(userAux[0]).remove(us);
     }
 
     @Override
     public List<String> listSubs(String user) {
-        List<String> s = new ArrayList<>();
-
+        String[] userAux = user.split("@");
+        List<String> s = new ArrayList<String>();
+        if(!follows.containsKey(userAux[0]))
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        for(User u : follows.get(userAux[0]))
+            s.add(u.getName());
+        return s;
     }
 }
