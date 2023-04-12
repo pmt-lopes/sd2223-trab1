@@ -6,12 +6,10 @@ import jakarta.ws.rs.core.Response.Status;
 import sd2223.trab1.api.User;
 import sd2223.trab1.api.rest.UsersService;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Logger;
 
+@Singleton
 public class RESTUserResource implements UsersService {
 
     private final Map<String,User> users = new HashMap<>();
@@ -37,7 +35,7 @@ public class RESTUserResource implements UsersService {
             throw new WebApplicationException( Status.CONFLICT );
         }
 
-        return user.getName();
+        return user.getName() + "@" + user.getDomain();
     }
 
     @Override

@@ -111,9 +111,7 @@ public class RestUserClient extends RestClient implements UsersService {
     }
 
     @Override
-    public User updateUser(String name, String pwd, User user) {
-        return super.reTry( () -> clt_updateUser(name, pwd, user) );
-    }
+    public User updateUser(String name, String pwd, User user) {return super.reTry( () -> clt_updateUser(name, pwd, user) ); }
 
     @Override
     public User deleteUser(String name, String pwd) {

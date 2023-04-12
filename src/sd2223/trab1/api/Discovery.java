@@ -139,7 +139,7 @@ class DiscoveryImpl implements Discovery {
                         ms.receive(pkt);
 
                         var msg = new String(pkt.getData(), 0, pkt.getLength());
-                        Log.info(String.format("Received: %s", msg));
+                        //Log.info(String.format("Received: %s", msg));
 
                         var parts = msg.split(DELIMITER);
                         if (parts.length == 2) {
