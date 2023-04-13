@@ -103,7 +103,6 @@ public class RESTUserResource implements UsersService {
     @Override
     public User deleteUser(String name, String pwd) {
         Log.info("deleteUser : name = " + name + "; pwd = " + pwd);
-        // TODO Complete method
 
         // Check if user is valid
         if(name == null || pwd == null) {
@@ -134,7 +133,6 @@ public class RESTUserResource implements UsersService {
     @Override
     public List<User> searchUsers(String pattern) {
         Log.info("searchUsers : pattern = " + pattern);
-        // TODO Complete method
 
         String p;
 

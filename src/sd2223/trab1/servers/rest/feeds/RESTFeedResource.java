@@ -28,10 +28,13 @@ public class RESTFeedResource implements FeedsService {
 
     // Follow data structure
     private final Map<String, Set<User>> follows = new HashMap();
+    private int num_seq;
     Discovery discovery = Discovery.getInstance();
     private ClientConfig config = new ClientConfig();
     private Client client = ClientBuilder.newClient(config);
-    public RESTFeedResource() {}
+    public RESTFeedResource() {
+        num_seq = 0;
+    }
     /*Esta info foi adicionado ao enunciado do trabalho, ms fica aqui também,
     com um pouco mais de detalhe: a partir da versão 4.0
     foi adicionado um segundo parâmetro quando se arranca o servidor
@@ -46,24 +49,35 @@ public class RESTFeedResource implements FeedsService {
         // validate user
         if(user==null||pwd == null)
             throw new WebApplicationException(Response.Status.BAD_REQUEST);
+
         String[] userAux = user.split("@");
-        URI[] uri = discovery.knownUrisOf("users.", 1);
-        WebTarget target = client.target(uri[0]).path(UsersService.PATH);
+
+        URI uri = discovery.knownUrisOf("users.", 1)[0];
+
+        WebTarget target = client.target(uri).path(UsersService.PATH);
+
         Response r = target.path(userAux[0])
                 .queryParam(UsersService.PWD, pwd).request()
                 .accept(MediaType.APPLICATION_JSON)
                 .get();
+
         User us =r.readEntity(User.class);
+
         if(!follows.containsKey(user)|| !us.getPwd().equals(pwd) )
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         if(!us.getPwd().equals(pwd))
             throw new WebApplicationException(Response.Status.FORBIDDEN);
+        //URI uri2 = discovery.knownUrisOf("feeds.", 1)[0];
+        //WebTarget target2 = client.target(uri2).path(FeedsService.PATH);
+        //Response r2 = target2.path(msg.getDomain())
+          //      .request()
         // post message in personal feed
-
+        msg.setId(num_seq++*256);
         feeds.get(user).add(msg);
 
 
         return msg.getId();
+
     }
 
     @Override

@@ -11,7 +11,7 @@ import sd2223.trab1.api.Discovery;
 public class RESTFeedsServer {
 
     private static Logger Log = Logger.getLogger(RESTFeedsServer.class.getName());
-
+    private static int base;
     static{
         System.setProperty("java.net.preferIPv4Stack", "true");
     }
@@ -26,14 +26,14 @@ public class RESTFeedsServer {
 
         try {
 
-            if (args.length != 1) {
+            if (args.length != 3) {
                 System.err.println("Invalid Argument! Expected: domain");
                 System.exit(0);
                 return;
             }
-
             // Get service name
             String serviceName = "feeds." + args[0];
+            base = Integer.parseInt(args[1]);
 
             ResourceConfig config = new ResourceConfig();
             config.register(RESTFeedResource.class);
@@ -53,5 +53,9 @@ public class RESTFeedsServer {
         } catch (Exception e) {
             Log.severe(e.getMessage());
         }
+    }
+
+    public static int getBase() {
+        return base;
     }
 }
