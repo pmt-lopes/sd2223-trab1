@@ -16,7 +16,7 @@ public class RESTFeedsServer {
         System.setProperty("java.net.preferIPv4Stack", "true");
     }
 
-    public static final int PORT = 8080;
+    public static final int PORT = 8081;
     private static final String SERVER_URI_FMT = "http://%s:%s/rest";
 
     public static void main(String[] args) {
