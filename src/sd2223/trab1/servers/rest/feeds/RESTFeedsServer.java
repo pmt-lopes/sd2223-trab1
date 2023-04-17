@@ -32,7 +32,7 @@ public class RESTFeedsServer {
                 return;
             }
             // Get service name
-            String serviceName = "feeds." + args[0];
+            String serviceName = args[0] + ":feeds";
             base = Integer.parseInt(args[1]);
 
             ResourceConfig config = new ResourceConfig();

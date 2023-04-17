@@ -67,7 +67,6 @@ public class RESTUserResource implements UsersService {
     @Override
     public User updateUser(String name, String pwd, User user) {
         Log.info("updateUser : name = " + name + "; pwd = " + pwd + " ; user = " + user);
-        // TODO Complete method
 
         // Check if parameters are valid
         if(!name.equals(user.getName())) {

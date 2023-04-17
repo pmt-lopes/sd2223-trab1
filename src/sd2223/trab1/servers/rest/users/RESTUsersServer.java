@@ -33,7 +33,7 @@ public class RESTUsersServer {
             }
 
             // Get service name
-            String serviceName = "users." + args[0];
+            String serviceName = args[0] + ":users";
 
             ResourceConfig config = new ResourceConfig();
             config.register(RESTUserResource.class);
