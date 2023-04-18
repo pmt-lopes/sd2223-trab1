@@ -15,11 +15,10 @@ public class RESTUserResource implements UsersService {
     private final Map<String,User> users = new HashMap<>();
 
     private static Logger Log = Logger.getLogger(RESTUserResource.class.getName());
-    @Singleton
+
     public RESTUserResource() {}
 
 
-    @Override
     public String createUser(User user) {
         Log.info("createUser : " + user);
 
@@ -38,7 +37,6 @@ public class RESTUserResource implements UsersService {
         return user.getName() + "@" + user.getDomain();
     }
 
-    @Override
     public User getUser(String name, String pwd) {
         Log.info("getUser : user = " + name + "; pwd = " + pwd);
 
@@ -64,7 +62,6 @@ public class RESTUserResource implements UsersService {
         return user;
     }
 
-    @Override
     public User updateUser(String name, String pwd, User user) {
         Log.info("updateUser : name = " + name + "; pwd = " + pwd + " ; user = " + user);
 
@@ -99,7 +96,6 @@ public class RESTUserResource implements UsersService {
         return user;
     }
 
-    @Override
     public User deleteUser(String name, String pwd) {
         Log.info("deleteUser : name = " + name + "; pwd = " + pwd);
 
@@ -129,7 +125,6 @@ public class RESTUserResource implements UsersService {
         return user;
     }
 
-    @Override
     public List<User> searchUsers(String pattern) {
         Log.info("searchUsers : pattern = " + pattern);
 
@@ -144,7 +139,7 @@ public class RESTUserResource implements UsersService {
         // Iterate Map entries
         for (Map.Entry<String, User> entry: users.entrySet()) {
 
-            // Check prefix
+            // Check pattern
             if(entry.getKey().contains(p)) u.add(entry.getValue());
         }
 

@@ -8,7 +8,7 @@
 	<version>1.0</version>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<authors>57514-60350</authors>
+		<authors>57514</authors>
 	</properties>
 
 	<build>
