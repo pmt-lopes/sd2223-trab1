@@ -37,7 +37,6 @@ public class RESTFeedsServer {
 
             ResourceConfig config = new ResourceConfig();
             config.register(RESTFeedResource.class);
-            // config.register(CustomLoggingFilter.class);
 
             String ip = InetAddress.getLocalHost().getHostAddress();
             String serverURI = String.format(SERVER_URI_FMT, ip, PORT);

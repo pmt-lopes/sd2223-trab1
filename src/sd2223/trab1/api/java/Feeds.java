@@ -1,7 +1,5 @@
 package sd2223.trab1.api.java;
 
-import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.MediaType;
 import sd2223.trab1.api.Message;
 
 import java.util.List;
@@ -15,8 +13,6 @@ public interface Feeds {
     Result<Message> getMessage(String user, long mid);
 
     Result<List<Message>> getMessages(String user, long time);
-
-    Result<List<Message>> getMessagesFromRemote(String user, String originalDomain, long time);
 
     Result<Void> subUser(String user, String userSub, String pwd);
 

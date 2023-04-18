@@ -57,21 +57,6 @@ public class RestClient {
         return null;
     }
 
-    protected void  voidreTry(Runnable func) {
-        for (int i = 0; i < MAX_RETRIES; i++)
-            try {
-                     func.run();
-            } catch (ProcessingException x) {
-                System.err.println( x.getMessage() );
-                Log.fine("ProcessingException: " + x.getMessage());
-                sleep(RETRY_SLEEP);
-            } catch (Exception x) {
-                Log.fine("Exception: " + x.getMessage());
-                x.printStackTrace();
-                break;
-            }
-
-    }
 
     protected <T> Result<T> toJavaResult(Response r, Class<T> entityType) {
         try {
