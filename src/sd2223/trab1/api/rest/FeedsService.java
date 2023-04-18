@@ -136,4 +136,16 @@ public interface FeedsService {
 	@Path("/sub/list/{" + USER + "}")
 	@Produces(MediaType.APPLICATION_JSON)
 	List<String> listSubs(@PathParam(USER) String user);
+
+	/**
+	 * Delete the feed of a user
+	 *
+	 * @param name
+	 * @return 200 if ok
+	 * 		   404 is generated if user does not exist
+	 * 		   403 is generated if pwd is not correct
+	 */
+	@DELETE
+	@Path("/{" + USER+ "}")
+	void deleteFeed(@PathParam(USER) String name, @QueryParam(PWD) String pwd);
 }

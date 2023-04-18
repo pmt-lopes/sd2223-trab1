@@ -1,4 +1,4 @@
-package sd2223.trab1.clients;
+package sd2223.trab1.clients.rest;
 
 import java.net.URI;
 import java.util.List;
@@ -10,9 +10,11 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
 import sd2223.trab1.api.User;
+import sd2223.trab1.api.java.Result;
+import sd2223.trab1.api.java.Users;
 import sd2223.trab1.api.rest.UsersService;
 
-public class RestUsersClient extends RestClient implements UsersService {
+public class RestUsersClient extends RestClient implements Users {
 
     final WebTarget target;
 
@@ -21,21 +23,21 @@ public class RestUsersClient extends RestClient implements UsersService {
         target = client.target( serverURI ).path( UsersService.PATH );
     }
 
-    private String clt_createUser( User user) {
+    private Result<String> clt_createUser( User user) {
 
         Response r = target.request()
                 .accept(MediaType.APPLICATION_JSON)
                 .post(Entity.entity(user, MediaType.APPLICATION_JSON));
 
         if( r.getStatus() == Status.OK.getStatusCode() && r.hasEntity() )
-            return r.readEntity(String.class);
+            return super.toJavaResult(r, String.class);
         else
             System.out.println("Error, HTTP error status: " + r.getStatus() );
 
         return null;
     }
 
-    private User clt_getUser(String name, String pwd) {
+    private Result<User> clt_getUser(String name, String pwd) {
 
         Response r = target.path( name )
                 .queryParam(UsersService.PWD, pwd).request()
@@ -43,14 +45,14 @@ public class RestUsersClient extends RestClient implements UsersService {
                 .get();
 
         if( r.getStatus() == Status.OK.getStatusCode() && r.hasEntity() )
-            return r.readEntity(User.class);
+            return super.toJavaResult(r, User.class);
         else
             System.out.println("Error, HTTP error status: " + r.getStatus() );
 
         return null;
     }
 
-    private User clt_deleteUser(String name, String pwd) {
+    private Result<User> clt_deleteUser(String name, String pwd) {
 
         Response r = target.path( name )
                 .queryParam(UsersService.PWD, pwd).request()
@@ -66,7 +68,7 @@ public class RestUsersClient extends RestClient implements UsersService {
         return null;
     }
 
-    private User clt_updateUser(String name, String pwd, User user) {
+    private Result<User> clt_updateUser(String name, String pwd, User user) {
 
         Response r = target.path( name )
                 .queryParam(UsersService.PWD, pwd).request()
@@ -83,7 +85,7 @@ public class RestUsersClient extends RestClient implements UsersService {
         return null;
     }
 
-    private List<User> clt_searchUser(String pattern) {
+    private Result<List<User>> clt_searchUser(String pattern) {
 
         Response r = target.path("/").queryParam( UsersService.QUERY, pattern).request()
                 .accept(MediaType.APPLICATION_JSON)
@@ -100,27 +102,27 @@ public class RestUsersClient extends RestClient implements UsersService {
     }
 
     @Override
-    public String createUser(User user) {
+    public Result<String> createUser(User user) {
         return super.reTry( () -> clt_createUser(user) );
     }
 
     @Override
-    public User getUser(String name, String pwd) {
+    public Result<User> getUser(String name, String pwd) {
         return super.reTry( () -> clt_getUser(name, pwd) );
     }
 
     @Override
-    public User updateUser(String name, String pwd, User user) {
+    public Result<User> updateUser(String name, String pwd, User user) {
         return super.reTry( () -> clt_updateUser(name, pwd, user) );
     }
 
     @Override
-    public User deleteUser(String name, String pwd) {
+    public Result<User> deleteUser(String name, String pwd) {
         return super.reTry( () -> clt_deleteUser(name, pwd) );
     }
 
     @Override
-    public List<User> searchUsers(String pattern) {
+    public Result<List<User>> searchUsers(String pattern) {
         return super.reTry( () -> clt_searchUser(pattern) );
     }
 }
