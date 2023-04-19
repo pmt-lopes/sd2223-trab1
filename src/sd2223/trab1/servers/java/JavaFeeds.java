@@ -10,6 +10,7 @@ import sd2223.trab1.api.Message;
 import sd2223.trab1.api.User;
 import sd2223.trab1.api.java.Feeds;
 import sd2223.trab1.api.java.Result;
+import sd2223.trab1.clients.UsersClientFactory;
 import sd2223.trab1.clients.rest.RestUsersClient;
 import sd2223.trab1.servers.rest.feeds.RESTFeedResource;
 
@@ -30,12 +31,16 @@ public class JavaFeeds implements Feeds {
     // Follow data structure
     private final Map<String, Set<User>> follows = new HashMap();
     private int num_seq;
+    private String domain;
+    private int base;
     Discovery discovery = Discovery.getInstance();
     private ClientConfig config = new ClientConfig();
     private Client client = ClientBuilder.newClient(config);
 
-    public JavaFeeds(){
+    public JavaFeeds(String domain, int base){
         num_seq = 0;
+        this.domain = domain;
+        this.base = base;
     }
 
     @Override
@@ -54,27 +59,23 @@ public class JavaFeeds implements Feeds {
 
         URI uri = discovery.knownUrisOf(serviceName, 1)[0];
 
-        RestUsersClient client = new RestUsersClient(uri);
+        var client = UsersClientFactory.get(uri);
+        var userResult = client.getUser(userAux[0], pwd);
 
-        User us =(User) client.getUser(userAux[0], pwd);
+        if (!userResult.isOK()){
+            return Result.error(userResult.error());
+        }
 
-        if(!follows.containsKey(user)|| !us.getPwd().equals(pwd) )
-            throw new WebApplicationException(Response.Status.NOT_FOUND);
-        if(!us.getPwd().equals(pwd))
-            throw new WebApplicationException(Response.Status.FORBIDDEN);
+        var feed = feeds.get(user);
 
-        // post message in personal feed
-        message.setId(num_seq++*256);
-
-        Map<Long, Message> feed = feeds.get(user);
-        if(feed == null)
+        if(feed == null){
             feed = new HashMap<>();
+        }
 
-        feed.put(message.getId(), message);
-        feeds.put(user, feed);
+        message.setId(num_seq * 256);
 
 
-        return Result.ok(message.getId());
+        return null;
     }
 
     @Override
@@ -89,11 +90,6 @@ public class JavaFeeds implements Feeds {
 
     @Override
     public Result<List<Message>> getMessages(String user, long time) {
-        return null;
-    }
-
-    @Override
-    public Result<List<Message>> getMessagesFromRemote(String user, String originalDomain, long time) {
         return null;
     }
 

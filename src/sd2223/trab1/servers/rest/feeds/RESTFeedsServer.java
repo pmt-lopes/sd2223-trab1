@@ -36,7 +36,7 @@ public class RESTFeedsServer {
             base = Integer.parseInt(args[1]);
 
             ResourceConfig config = new ResourceConfig();
-            config.register(RESTFeedResource.class);
+            config.register(new RESTFeedResource(args[0], base));
 
             String ip = InetAddress.getLocalHost().getHostAddress();
             String serverURI = String.format(SERVER_URI_FMT, ip, PORT);
