@@ -1,41 +1,31 @@
 package sd2223.trab1.servers.java;
 
 import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.core.Response;
-import org.glassfish.jersey.client.ClientConfig;
+import jakarta.ws.rs.core.Response.Status;
 import sd2223.trab1.api.Discovery;
+import sd2223.trab1.api.Feed;
 import sd2223.trab1.api.Message;
 import sd2223.trab1.api.User;
 import sd2223.trab1.api.java.Feeds;
 import sd2223.trab1.api.java.Result;
 import sd2223.trab1.clients.UsersClientFactory;
-import sd2223.trab1.clients.rest.RestUsersClient;
-import sd2223.trab1.servers.rest.feeds.RESTFeedResource;
 
 import java.net.URI;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 public class JavaFeeds implements Feeds {
 
-    private static Logger Log = Logger.getLogger(JavaFeeds.class.getName());
+    private static final Logger Log = Logger.getLogger(JavaFeeds.class.getName());
 
-    // Feeds data structure
-    private final Map<String, Map<Long, Message>> feeds = new HashMap();
-
-    // Follow data structure
-    private final Map<String, Set<User>> follows = new HashMap();
+    private final Map<String, Feed> feeds = new ConcurrentHashMap<>();
     private int num_seq;
-    private String domain;
-    private int base;
+    private final String domain;
+    private final int base;
     Discovery discovery = Discovery.getInstance();
-    private ClientConfig config = new ClientConfig();
-    private Client client = ClientBuilder.newClient(config);
 
     public JavaFeeds(String domain, int base){
         num_seq = 0;
@@ -47,69 +37,291 @@ public class JavaFeeds implements Feeds {
     public Result<Long> postMessage(String user, String pwd, Message message) {
         Log.info("postMessage attempt by " + user);
 
-        // validate user
         if(user==null || pwd == null || message == null){
             Log.info("Null parameter.");
             throw new WebApplicationException(Response.Status.BAD_REQUEST);
         }
 
         String[] userAux = user.split("@");
+        String userName = userAux[0];
 
-        String serviceName = userAux[1] + ":users";
-
-        URI uri = discovery.knownUrisOf(serviceName, 1)[0];
-
-        var client = UsersClientFactory.get(uri);
-        var userResult = client.getUser(userAux[0], pwd);
-
-        if (!userResult.isOK()){
-            return Result.error(userResult.error());
+        if (!userAux[1].equals(domain)) {
+            Log.info("Incorrect domain");
+            throw new WebApplicationException(Status.BAD_REQUEST);
         }
 
-        var feed = feeds.get(user);
+        if(!userExists(userName, userAux[1])){
+            Log.info("User does not exist");
+            throw new WebApplicationException(Status.NOT_FOUND);
+        }
+
+        var result = getUser(userName, userAux[1], pwd);
+
+        if(result == null){
+            Log.info("Incorrect password.");
+            throw new WebApplicationException(Status.FORBIDDEN);
+        }
+
+        var feed = feeds.get(userName);
 
         if(feed == null){
-            feed = new HashMap<>();
+            feed = new Feed();
         }
 
-        message.setId(num_seq * 256);
+        message.setId(num_seq * 256L + base);
+        num_seq++;
+        feed.postMessage(message);
 
+        feeds.put(userName, feed);
 
-        return null;
+        return Result.ok(message.getId());
     }
 
     @Override
     public Result<Void> removeFromPersonalFeed(String user, long mid, String pwd) {
-        return null;
+        Log.info("postMessage attempt by " + user);
+
+        if(user == null || pwd == null){
+            Log.info("Null parameter.");
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        String[] userAux = user.split("@");
+        String userName = userAux[0];
+
+        if (!userAux[1].equals(domain)) {
+            Log.info("Incorrect domain");
+            throw new WebApplicationException(Status.BAD_REQUEST);
+        }
+
+        if(!userExists(userName, userAux[1])){
+            Log.info("User does not exist");
+            throw new WebApplicationException(Status.NOT_FOUND);
+        }
+
+        var result = getUser(userName, userAux[1], pwd);
+
+        if(result == null){
+            Log.info("Incorrect password.");
+            throw new WebApplicationException(Status.FORBIDDEN);
+        }
+
+        Feed feed = feeds.get(userName);
+
+        if(feed.getMessage(mid) == null){
+            Log.info("No message with id " + mid);
+            throw new WebApplicationException(Status.NOT_FOUND);
+        }
+
+        feed.removeMessage(mid);
+
+        return Result.ok();
     }
 
     @Override
     public Result<Message> getMessage(String user, long mid) {
-        return null;
+        Log.info("getMessage from user " + user);
+
+        if(user == null){
+            Log.info("Null user.");
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        String[] userAux = user.split("@");
+        String userName = userAux[0];
+
+        if(!userExists(userName, userAux[1])){
+            Log.info("User does not exist");
+            throw new WebApplicationException(Status.NOT_FOUND);
+        }
+
+        Feed feed = feeds.get(userName);
+        if (feed == null) {
+            Log.info("Feed does not exist.");
+            throw new WebApplicationException(Status.NOT_FOUND);
+        }
+
+        Message msg = feed.getMessage(mid);
+        if(msg == null) {
+            Log.info("Message does not exist.");
+            throw new WebApplicationException(Status.NOT_FOUND);
+        }
+        return Result.ok(msg);
     }
+
+    // GetMessage local
+
+    // GetMessage remote
 
     @Override
     public Result<List<Message>> getMessages(String user, long time) {
-        return null;
+        Log.info("getMessages from user " + user);
+
+        if(user == null){
+            Log.info("Null user.");
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        String[] userAux = user.split("@");
+        String userName = userAux[0];
+
+        var result = userExists(userName, userAux[1]);
+
+        if(!result){
+            Log.info("User does not exist");
+            throw new WebApplicationException(Status.NOT_FOUND);
+        }
+
+        Feed feed = feeds.get(userName);
+        if (feed == null) {
+            feed = new Feed();
+            feeds.put(userName, feed);
+        }
+
+        return Result.ok(feed.getMessages(time));
     }
+
+    // GetMessages Local
+
+    // GetMessages Remote
 
     @Override
     public Result<Void> subUser(String user, String userSub, String pwd) {
-        return null;
+        Log.info(user + " is subscribing to " + userSub);
+
+        if(user == null || userSub == null || pwd == null){
+            Log.info("Null parameter.");
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        String[] userAux = user.split("@");
+        String[] userSubAux = userSub.split("@");
+        String userName = userAux[0];
+        String userSubName = userSubAux[0];
+
+        var result1 = userExists(userName, userAux[1]);
+        var result2 = userExists(userSubName, userSubAux[1]);
+
+        if(!result1 || !result2){
+            Log.info("One of the users does not exist");
+            throw new WebApplicationException(Status.NOT_FOUND);
+        }
+
+        var resultGet = getUser(userName, userAux[1], pwd);
+        if(resultGet == null){
+            Log.info("Password is incorrect.");
+            throw new WebApplicationException(Status.FORBIDDEN);
+        }
+
+        Feed userFeed = feeds.get(userName);
+        if (userFeed == null) {
+            userFeed = new Feed();
+            feeds.put(userName, userFeed);
+        }
+        Feed userSubFeed = feeds.get(userSubName);
+        if (userSubFeed == null) {
+            userSubFeed = new Feed();
+            feeds.put(userSubName, userSubFeed);
+        }
+
+        userFeed.subUser(userSub);
+        userSubFeed.addFollower(user);
+
+        return Result.ok();
     }
 
     @Override
     public Result<Void> unsubscribeUser(String user, String userSub, String pwd) {
-        return null;
+        Log.info(user + " is unsubscribing from " + userSub);
+
+        if(user == null || userSub == null || pwd == null){
+            Log.info("Null parameter.");
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        String[] userAux = user.split("@");
+        String[] userSubAux = userSub.split("@");
+        String userName = userAux[0];
+        String userSubName = userSubAux[0];
+
+        var result1 = userExists(userName, userAux[1]);
+        var result2 = userExists(userSubName, userSubAux[1]);
+
+        if(!result1 || !result2){
+            Log.info("One of the users does not exist");
+            throw new WebApplicationException(Status.NOT_FOUND);
+        }
+
+        var resultGet = getUser(userName, userAux[1], pwd);
+        if(resultGet == null){
+            Log.info("Password is incorrect.");
+            throw new WebApplicationException(Status.FORBIDDEN);
+        }
+
+        Feed userFeed = feeds.get(userName);
+        Feed userSubFeed = feeds.get(userSubName);
+
+        userFeed.unsubUser(userSub);
+        userSubFeed.removeFollower(user);
+
+        return Result.ok();
     }
 
     @Override
     public Result<List<String>> listSubs(String user) {
-        return null;
+        Log.info("Listing subscribed users of " + user);
+
+        if(user == null){
+            Log.info("Null user.");
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        String[] userAux = user.split("@");
+        String userName = userAux[0];
+        boolean result = userExists(userName, userAux[1]);
+
+        if(!result){
+            Log.info("User does not exist");
+            throw new WebApplicationException(Status.NOT_FOUND);
+        }
+
+        Feed feed = feeds.get(userName);
+        if (feed == null){
+            feed = new Feed();
+            feeds.put(userName, feed);
+        }
+
+        return Result.ok(feed.getUserSubs());
     }
 
     @Override
     public Result<Void> deleteFeed(String user, String pwd) {
         return null;
+    }
+
+    private User getUser(String name, String domain, String pwd){
+        String serviceName = domain + ":users";
+
+        URI[] uris = discovery.knownUrisOf(serviceName, 1);
+
+        var client = UsersClientFactory.get(uris[0]);
+        var result = client.getUser(name, pwd);
+
+        if(result == null){
+            return null;
+        }
+
+        return result.value();
+    }
+
+    private boolean userExists(String name, String domain){
+        String serviceName = domain + ":users";
+
+        URI[] uris = discovery.knownUrisOf(serviceName, 1);
+
+        var client = UsersClientFactory.get(uris[0]);
+        var result = client.hasUser(name);
+
+        return result.value();
     }
 }

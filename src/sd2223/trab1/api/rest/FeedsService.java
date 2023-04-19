@@ -115,7 +115,7 @@ public interface FeedsService {
 	 * @param user the user unsubscribing (following) other user (format user@domain)
 	 * @param userSub the identifier of the user to be unsubscribed
 	 * @param pwd password of the user
-	 * @return 	204 if ok
+	 * @return 	200 if ok
 	 * 			404 is generated if the user or the user to be unsubscribed does not exist
 	 * 			403 is generated if the pwd is not correct
 	 */
