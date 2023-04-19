@@ -26,12 +26,6 @@ public class RESTUsersServer {
 
         try {
 
-            if (args.length != 1) {
-                System.err.println("Invalid Argument! Expected: domain");
-                System.exit(0);
-                return;
-            }
-
             // Get service name
             String serviceName = args[0] + ":users";
 

@@ -101,6 +101,20 @@ public class RestUsersClient extends RestClient implements Users {
         return null;
     }
 
+    private Result<Boolean> clt_hasUser(String name) {
+
+        Response r = target.path("hasUser/" + name).request()
+                .accept(MediaType.APPLICATION_JSON)
+                .get();
+
+        if( r.getStatus() == Status.OK.getStatusCode() && r.hasEntity() )
+            return super.toJavaResult(r, Boolean.class);
+        else
+            System.out.println("Error, HTTP error status: " + r.getStatus());
+
+        return null;
+    }
+
     @Override
     public Result<String> createUser(User user) {
         return super.reTry( () -> clt_createUser(user) );
@@ -124,5 +138,10 @@ public class RestUsersClient extends RestClient implements Users {
     @Override
     public Result<List<User>> searchUsers(String pattern) {
         return super.reTry( () -> clt_searchUser(pattern) );
+    }
+
+    @Override
+    public Result<Boolean> hasUser(String name) {
+        return super.reTry( () -> clt_hasUser(name));
     }
 }

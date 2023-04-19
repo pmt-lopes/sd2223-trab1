@@ -16,7 +16,7 @@ public class RESTFeedsServer {
         System.setProperty("java.net.preferIPv4Stack", "true");
     }
 
-    public static final int PORT = 8081;
+    public static final int PORT = 8080;
     private static final String SERVER_URI_FMT = "http://%s:%s/rest";
 
     public static void main(String[] args) {
@@ -26,11 +26,6 @@ public class RESTFeedsServer {
 
         try {
 
-            if (args.length != 3) {
-                System.err.println("Invalid Argument! Expected: domain");
-                System.exit(0);
-                return;
-            }
             // Get service name
             String serviceName = args[0] + ":feeds";
             base = Integer.parseInt(args[1]);

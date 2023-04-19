@@ -5,19 +5,18 @@ import jakarta.ws.rs.core.Response;
 import sd2223.trab1.api.User;
 import sd2223.trab1.api.java.Result;
 import sd2223.trab1.api.java.Users;
-import sd2223.trab1.servers.rest.users.RESTUserResource;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 public class JavaUsers implements Users {
 
-    private final Map<String,User> users = new HashMap<>();
+    private final Map<String,User> users = new ConcurrentHashMap<>();
 
-    private static Logger Log = Logger.getLogger(JavaUsers.class.getName());
+    private static final Logger Log = Logger.getLogger(JavaUsers.class.getName());
 
     @Override
     public Result<String> createUser(User user) {
@@ -139,7 +138,7 @@ public class JavaUsers implements Users {
         if(pattern == null) p = "";
         else p = pattern;
 
-        List<User> u = new ArrayList<User>();
+        List<User> u = new ArrayList<>();
 
         // Iterate Map entries
         for (Map.Entry<String, User> entry: users.entrySet()) {
@@ -149,5 +148,19 @@ public class JavaUsers implements Users {
         }
 
         return Result.ok(u);
+    }
+
+    @Override
+    public Result<Boolean> hasUser(String name) {
+        Log.info("hasUser: " + name);
+
+        if( name == null ) {
+            Log.info("User does not exist.");
+            throw new WebApplicationException( Response.Status.NOT_FOUND );
+        }
+
+        Boolean result = users.containsKey(name);
+
+        return Result.ok(result);
     }
 }
