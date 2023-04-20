@@ -2,6 +2,8 @@ package sd2223.trab1.servers.rest.feeds;
 
 import java.net.InetAddress;
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
@@ -31,8 +33,12 @@ public class RESTFeedsServer {
             String serviceName = domain + FEEDS;
             int base = Integer.parseInt(args[1]);
 
+            Map<String, Object> props = new HashMap<>();
+            props.put("domain", domain);
+            props.put("base", base);
+
             ResourceConfig config = new ResourceConfig();
-            config.register(new RESTFeedResource(domain, base));
+            config.register(RESTFeedResource.class).setProperties(props);
 
             String ip = InetAddress.getLocalHost().getHostAddress();
             String serverURI = String.format(SERVER_URI_FMT, ip, PORT);

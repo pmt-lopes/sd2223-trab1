@@ -56,7 +56,7 @@ class DiscoveryImpl implements Discovery {
     static final int DISCOVERY_ANNOUNCE_PERIOD = 1000;
 
     // Replace with appropriate values...
-    static final InetSocketAddress DISCOVERY_ADDR = new InetSocketAddress("224.0.0.1", 1000);
+    static final InetSocketAddress DISCOVERY_ADDR = new InetSocketAddress("226.226.226.226", 2266);
 
     // Used separate the two fields that make up a service announcement.
     private static final String DELIMITER = "\t";
@@ -83,10 +83,7 @@ class DiscoveryImpl implements Discovery {
         Log.info(String.format("Starting Discovery announcements on: %s for: %s -> %s\n", DISCOVERY_ADDR, serviceName,
                 serviceURI));
 
-        // Announces as service:domain
-        var domain = serviceName.split(":")[0];
-        var service = serviceName.split(":")[1];
-        var pktBytes = String.format("%s:%s%s%s", service, domain, DELIMITER, serviceURI).getBytes();
+        var pktBytes = String.format("%s%s%s", serviceName, DELIMITER, serviceURI).getBytes();
         var pkt = new DatagramPacket(pktBytes, pktBytes.length, DISCOVERY_ADDR);
 
         // start thread to send periodic announcements
@@ -147,13 +144,10 @@ class DiscoveryImpl implements Discovery {
                         var parts = msg.split(DELIMITER);
                         if (parts.length == 2) {
 
-                            // Receives service:domain
                             var serviceName = parts[0];
-                            String[] split = serviceName.split(":");
-                            var newServiceName = split[1] + ":" + split[0];
                             var uri = URI.create(parts[1]);
 
-                            knownServices.computeIfAbsent(newServiceName, (k) -> ConcurrentHashMap.newKeySet()).add( uri );
+                            knownServices.computeIfAbsent(serviceName, (k) -> ConcurrentHashMap.newKeySet()).add( uri );
 
                         }
 

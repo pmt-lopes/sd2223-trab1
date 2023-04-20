@@ -1,6 +1,8 @@
 package sd2223.trab1.servers.rest.feeds;
 
 import jakarta.inject.Singleton;
+import jakarta.ws.rs.core.Configuration;
+import jakarta.ws.rs.core.Context;
 import sd2223.trab1.api.Message;
 import sd2223.trab1.api.java.Feeds;
 import sd2223.trab1.api.rest.FeedsService;
@@ -14,7 +16,9 @@ public class RESTFeedResource extends RestResource implements FeedsService {
 
     final Feeds impl;
 
-    public RESTFeedResource(String domain, int base) {
+    public RESTFeedResource (@Context Configuration config) {
+        String domain = (String) config.getProperty("domain");
+        int base = (int) config.getProperty("base");
         this.impl = new JavaFeeds(domain, base);
     }
 
