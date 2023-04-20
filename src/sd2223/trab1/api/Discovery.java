@@ -24,7 +24,7 @@ public interface Discovery {
      * @param serviceName - the name of the service
      * @param serviceURI - the uri of the service
      */
-    public void announce(String serviceName, String serviceURI);
+    void announce(String serviceName, String serviceURI);
 
     /**
      * Get discovered URIs for a given service name
@@ -32,13 +32,13 @@ public interface Discovery {
      * @param minReplies - minimum number of requested URIs. Blocks until the number is satisfied.
      * @return array with the discovered URIs for the given service name.
      */
-    public URI[] knownUrisOf(String serviceName, int minReplies);
+    URI[] knownUrisOf(String serviceName, int minReplies);
 
     /**
      * Get the instance of the Discovery service
      * @return the singleton instance of the Discovery service
      */
-    public static Discovery getInstance() {
+    static Discovery getInstance() {
         return DiscoveryImpl.getInstance();
     }
 }
@@ -48,9 +48,9 @@ public interface Discovery {
  */
 class DiscoveryImpl implements Discovery {
 
-    private static Logger Log = Logger.getLogger(Discovery.class.getName());
+    private static final Logger Log = Logger.getLogger(Discovery.class.getName());
 
-    // The pre-aggreed multicast endpoint assigned to perform discovery.
+    // The pre-agreed multicast endpoint assigned to perform discovery.
 
     static final int DISCOVERY_RETRY_TIMEOUT = 5000;
     static final int DISCOVERY_ANNOUNCE_PERIOD = 1000;
@@ -65,7 +65,7 @@ class DiscoveryImpl implements Discovery {
 
     private static Discovery singleton;
 
-    private ConcurrentHashMap<String, Set<URI>> knownServices = new ConcurrentHashMap<String, Set<URI>>();
+    private final ConcurrentHashMap<String, Set<URI>> knownServices = new ConcurrentHashMap<>();
 
     synchronized static Discovery getInstance() {
         if (singleton == null) {
@@ -83,7 +83,10 @@ class DiscoveryImpl implements Discovery {
         Log.info(String.format("Starting Discovery announcements on: %s for: %s -> %s\n", DISCOVERY_ADDR, serviceName,
                 serviceURI));
 
-        var pktBytes = String.format("%s%s%s", serviceName, DELIMITER, serviceURI).getBytes();
+        // Announces as service:domain
+        var domain = serviceName.split(":")[0];
+        var service = serviceName.split(":")[1];
+        var pktBytes = String.format("%s:%s%s%s", service, domain, DELIMITER, serviceURI).getBytes();
         var pkt = new DatagramPacket(pktBytes, pktBytes.length, DISCOVERY_ADDR);
 
         // start thread to send periodic announcements
@@ -144,10 +147,13 @@ class DiscoveryImpl implements Discovery {
                         var parts = msg.split(DELIMITER);
                         if (parts.length == 2) {
 
+                            // Receives service:domain
                             var serviceName = parts[0];
+                            String[] split = serviceName.split(":");
+                            var newServiceName = split[1] + ":" + split[0];
                             var uri = URI.create(parts[1]);
 
-                            knownServices.computeIfAbsent(serviceName, (k) -> ConcurrentHashMap.newKeySet()).add( uri );
+                            knownServices.computeIfAbsent(newServiceName, (k) -> ConcurrentHashMap.newKeySet()).add( uri );
 
                         }
 

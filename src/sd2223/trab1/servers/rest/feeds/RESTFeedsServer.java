@@ -10,13 +10,14 @@ import sd2223.trab1.api.Discovery;
 
 public class RESTFeedsServer {
 
-    private static Logger Log = Logger.getLogger(RESTFeedsServer.class.getName());
-    private static int base;
+    private static final Logger Log = Logger.getLogger(RESTFeedsServer.class.getName());
+
     static{
         System.setProperty("java.net.preferIPv4Stack", "true");
     }
 
     public static final int PORT = 8080;
+    private static final String FEEDS = ":feeds";
     private static final String SERVER_URI_FMT = "http://%s:%s/rest";
 
     public static void main(String[] args) {
@@ -25,18 +26,17 @@ public class RESTFeedsServer {
         Discovery discovery = Discovery.getInstance();
 
         try {
-
+            String domain = args[0];
             // Get service name
-            String serviceName = args[0] + ":feeds";
-            base = Integer.parseInt(args[1]);
+            String serviceName = domain + FEEDS;
+            int base = Integer.parseInt(args[1]);
 
             ResourceConfig config = new ResourceConfig();
-            config.register(new RESTFeedResource(args[0], base));
+            config.register(new RESTFeedResource(domain, base));
 
             String ip = InetAddress.getLocalHost().getHostAddress();
             String serverURI = String.format(SERVER_URI_FMT, ip, PORT);
             JdkHttpServerFactory.createHttpServer(URI.create(serverURI.replace(ip, "0.0.0.0")), config);
-
 
             // Announce
             discovery.announce(serviceName, serverURI);
@@ -49,7 +49,4 @@ public class RESTFeedsServer {
         }
     }
 
-    public static int getBase() {
-        return base;
-    }
 }

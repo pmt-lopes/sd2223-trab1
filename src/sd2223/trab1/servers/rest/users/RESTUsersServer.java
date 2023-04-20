@@ -10,13 +10,14 @@ import sd2223.trab1.api.Discovery;
 
 public class RESTUsersServer {
 
-    private static Logger Log = Logger.getLogger(RESTUsersServer.class.getName());
+    private static final Logger Log = Logger.getLogger(RESTUsersServer.class.getName());
 
     static{
         System.setProperty("java.net.preferIPv4Stack", "true");
     }
 
     public static final int PORT = 8080;
+    private static final String USERS = ":users";
     private static final String SERVER_URI_FMT = "http://%s:%s/rest";
 
     public static void main(String[] args) {
@@ -25,9 +26,9 @@ public class RESTUsersServer {
         Discovery discovery = Discovery.getInstance();
 
         try {
-
+            String domain = args[0];
             // Get service name
-            String serviceName = args[0] + ":users";
+            String serviceName = domain + USERS;
 
             ResourceConfig config = new ResourceConfig();
             config.register(RESTUserResource.class);
