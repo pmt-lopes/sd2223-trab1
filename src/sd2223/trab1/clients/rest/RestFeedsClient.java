@@ -70,7 +70,8 @@ public class RestFeedsClient extends RestClient implements Feeds {
 
     private Result<Void> clt_subUser(String user, String userSub, String pwd) {
 
-        Response r = target.path(user)
+        Response r = target.path("sub")
+                .path(user)
                 .path(userSub)
                 .queryParam(FeedsService.PWD, pwd)
                 .request()
@@ -82,7 +83,8 @@ public class RestFeedsClient extends RestClient implements Feeds {
 
     private Result<Void> clt_unsubscribeUser(String user, String userSub, String pwd) {
 
-        Response r = target.path(user)
+        Response r = target.path("sub")
+                .path(user)
                 .path(userSub)
                 .queryParam(FeedsService.PWD, pwd)
                 .request()
@@ -94,7 +96,9 @@ public class RestFeedsClient extends RestClient implements Feeds {
 
     private Result<List<String>> clt_listSubs(String user) {
 
-        Response r = target.path(user)
+        Response r = target.path("sub")
+                .path("list")
+                .path(user)
                 .request()
                 .accept(MediaType.APPLICATION_JSON)
                 .get();
@@ -111,6 +115,19 @@ public class RestFeedsClient extends RestClient implements Feeds {
                 .delete();
 
         return super.toJavaResult(r, Void.class);
+    }
+
+    private Result<Void> clt_updateFeedSubs(String user, Message msg){
+
+        Response r = target.path("sub")
+                .path("feed")
+                .queryParam("user", user)
+                .request()
+                .accept(MediaType.APPLICATION_JSON)
+                .post(Entity.entity(msg, MediaType.APPLICATION_JSON));
+
+        return super.toJavaResult(r, Void.class);
+
     }
 
     @Override
@@ -151,5 +168,10 @@ public class RestFeedsClient extends RestClient implements Feeds {
     @Override
     public Result<Void> deleteFeed(String name, String pwd) {
         return super.reTry( () -> clt_deleteFeed(name, pwd));
+    }
+
+    @Override
+    public Result<Void> updateFeedSubs(String user, Message msg) {
+        return super.reTry( () -> clt_updateFeedSubs(user, msg));
     }
 }

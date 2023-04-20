@@ -21,4 +21,6 @@ public interface Feeds {
     Result<List<String>> listSubs(String user);
 
     Result<Void> deleteFeed(String user, String pwd);
+
+    Result<Void> updateFeedSubs(String user, Message msg);
 }

@@ -148,4 +148,8 @@ public interface FeedsService {
 	@DELETE
 	@Path("/{" + USER+ "}")
 	void deleteFeed(@PathParam(USER) String name, @QueryParam(PWD) String pwd);
+
+	@POST
+	@Path("/sub/feed")
+	void updateFeedSubs(@QueryParam(USER) String user, Message msg);
 }

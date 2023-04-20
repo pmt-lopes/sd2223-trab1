@@ -9,9 +9,11 @@ import sd2223.trab1.api.Message;
 import sd2223.trab1.api.User;
 import sd2223.trab1.api.java.Feeds;
 import sd2223.trab1.api.java.Result;
+import sd2223.trab1.clients.FeedsClientFactory;
 import sd2223.trab1.clients.UsersClientFactory;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,6 +35,7 @@ public class JavaFeeds implements Feeds {
         this.base = base;
     }
 
+    // May need to synchronise message post
     @Override
     public Result<Long> postMessage(String user, String pwd, Message message) {
         Log.info("postMessage attempt by " + user);
@@ -66,13 +69,15 @@ public class JavaFeeds implements Feeds {
 
         if(feed == null){
             feed = new Feed();
+            feeds.put(userName, feed);
         }
 
         message.setId(num_seq * 256L + base);
         num_seq++;
         feed.postMessage(message);
 
-        feeds.put(userName, feed);
+        if(!feed.getFollowers().isEmpty())
+            propagateMessage(feed.getFollowers(), user, message);
 
         return Result.ok(message.getId());
     }
@@ -218,13 +223,15 @@ public class JavaFeeds implements Feeds {
             userFeed = new Feed();
             feeds.put(userName, userFeed);
         }
+        userFeed.subUser(userSub);
+
+        //ToDo remote userSub
+
         Feed userSubFeed = feeds.get(userSubName);
         if (userSubFeed == null) {
             userSubFeed = new Feed();
             feeds.put(userSubName, userSubFeed);
         }
-
-        userFeed.subUser(userSub);
         userSubFeed.addFollower(user);
 
         return Result.ok();
@@ -257,6 +264,8 @@ public class JavaFeeds implements Feeds {
             Log.info("Password is incorrect.");
             throw new WebApplicationException(Status.FORBIDDEN);
         }
+
+        //ToDo remote userSub
 
         Feed userFeed = feeds.get(userName);
         Feed userSubFeed = feeds.get(userSubName);
@@ -299,6 +308,17 @@ public class JavaFeeds implements Feeds {
         return null;
     }
 
+    public Result<Void> updateFeedSubs(String user, Message msg){
+
+        List<Feed> list = new ArrayList<>(feeds.values());
+        for(Feed feed: list){
+            if(feed.getUserSubs().contains(user))
+                feed.postMessage(msg);
+        }
+
+        return Result.ok();
+    }
+
     private User getUser(String name, String domain, String pwd){
         String serviceName = domain + ":users";
 
@@ -324,4 +344,30 @@ public class JavaFeeds implements Feeds {
 
         return result.value();
     }
+
+    private void propagateMessage(List<String> subs, String user, Message msg){
+        List<String> domains = new ArrayList<>();
+        boolean hasLocalFollower = false;
+
+        // Get remote domains
+        // Adding the same domain multiple times?
+        for(String sub: subs){
+            String[] subAux = sub.split("@");
+            if(!domain.equals(subAux[1]))
+                domains.add(subAux[1]);
+            else
+                hasLocalFollower = true;
+        }
+
+        // Send to remote domains, 1 operation per domain
+        for(String domain: domains){
+            URI uri = discovery.knownUrisOf(domain + ":feeds",1)[0];
+            var client = FeedsClientFactory.get(uri);
+            client.updateFeedSubs(user, msg);
+        }
+        // send to local users
+        if(hasLocalFollower)
+            this.updateFeedSubs(user, msg);
+    }
+
 }
