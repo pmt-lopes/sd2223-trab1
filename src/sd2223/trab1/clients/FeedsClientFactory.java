@@ -2,6 +2,7 @@ package sd2223.trab1.clients;
 
 import sd2223.trab1.api.java.Feeds;
 import sd2223.trab1.clients.rest.RestFeedsClient;
+import sd2223.trab1.clients.soap.SoapFeedsClient;
 
 import java.net.URI;
 
@@ -24,7 +25,7 @@ public class FeedsClientFactory {
             return new RestFeedsClient(serverURI);
         else if (uriString.endsWith(SOAP))
             //Soap not implemented
-            return null;
+            return new SoapFeedsClient(serverURI);
         else
             throw new RuntimeException("Unknown service type..." + uriString);
     }

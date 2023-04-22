@@ -55,4 +55,24 @@ public class SoapFeedsWebService extends SoapWebService<FeedsException> implemen
     public List<String> listSubs(String user) throws FeedsException {
         return super.fromJavaResult(impl.listSubs(user));
     }
+
+    @Override
+    public void deleteFeed(String name) throws FeedsException{
+        super.fromJavaResult(impl.deleteFeed(name));
+    }
+
+    @Override
+    public void updateFeedSubs(String user, Message msg) throws FeedsException{
+        super.fromJavaResult(impl.updateFeedSubs(user, msg));
+    }
+
+    @Override
+    public void addSubscriber(String user, String sub) throws FeedsException{
+        super.fromJavaResult(impl.addSubscriber(user, sub));
+    }
+
+    @Override
+    public void removeSubscriber(String user, String sub) throws FeedsException{
+        super.fromJavaResult(impl.removeSubscriber(user, sub));
+    }
 }

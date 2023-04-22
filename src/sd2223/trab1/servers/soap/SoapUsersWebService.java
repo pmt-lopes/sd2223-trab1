@@ -17,9 +17,9 @@ public class SoapUsersWebService extends SoapWebService<UsersException> implemen
 
     final Users impl;
 
-    public SoapUsersWebService() {
+    public SoapUsersWebService(String domain) {
         super( (result)-> new UsersException( result.error().toString()));
-        this.impl = new JavaUsers();
+        this.impl = new JavaUsers(domain);
     }
 
     @Override
@@ -45,5 +45,10 @@ public class SoapUsersWebService extends SoapWebService<UsersException> implemen
     @Override
     public List<User> searchUsers(String pattern) throws UsersException {
         return super.fromJavaResult( impl.searchUsers(pattern));
+    }
+
+    @Override
+    public Boolean hasUser(String user) throws UsersException {
+        return super.fromJavaResult( impl.hasUser(user) );
     }
 }

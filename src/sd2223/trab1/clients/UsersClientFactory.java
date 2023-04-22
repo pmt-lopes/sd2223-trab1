@@ -4,6 +4,7 @@ import java.net.URI;
 
 import sd2223.trab1.api.java.Users;
 import sd2223.trab1.clients.rest.RestUsersClient;
+import sd2223.trab1.clients.soap.SoapUsersClient;
 
 public class UsersClientFactory {
 
@@ -17,7 +18,7 @@ public class UsersClientFactory {
             return new RestUsersClient(serverURI);
         else if (uriString.endsWith(SOAP))
             //Soap not implemented
-            return null;
+            return new SoapUsersClient(serverURI);
         else
             throw new RuntimeException("Unknown service type..." + uriString);
     }

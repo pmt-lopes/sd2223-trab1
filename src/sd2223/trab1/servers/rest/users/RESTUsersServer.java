@@ -2,6 +2,8 @@ package sd2223.trab1.servers.rest.users;
 
 import java.net.InetAddress;
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
@@ -30,8 +32,11 @@ public class RESTUsersServer {
             // Get service name
             String serviceName = domain + USERS;
 
+            Map<String, Object> props = new HashMap<>();
+            props.put("domain", domain);
+
             ResourceConfig config = new ResourceConfig();
-            config.register(RESTUserResource.class);
+            config.register(RESTUserResource.class).setProperties(props);
 
             String ip = InetAddress.getLocalHost().getHostAddress();
             String serverURI = String.format(SERVER_URI_FMT, ip, PORT);

@@ -1,6 +1,8 @@
 package sd2223.trab1.servers.rest.users;
 
 import jakarta.inject.Singleton;
+import jakarta.ws.rs.core.Configuration;
+import jakarta.ws.rs.core.Context;
 import sd2223.trab1.api.User;
 import sd2223.trab1.api.java.Users;
 import sd2223.trab1.api.rest.UsersService;
@@ -13,8 +15,9 @@ import java.util.List;
 public class RESTUserResource extends RestResource implements UsersService {
 
     final Users impl;
-    public RESTUserResource() {
-        this.impl = new JavaUsers();
+    public RESTUserResource(@Context Configuration config) {
+        String domain = (String) config.getProperty("domain");
+        this.impl = new JavaUsers(domain);
     }
 
     @Override

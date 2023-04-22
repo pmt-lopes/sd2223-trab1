@@ -2,10 +2,13 @@ package sd2223.trab1.servers.java;
 
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
+import sd2223.trab1.api.Discovery;
 import sd2223.trab1.api.User;
 import sd2223.trab1.api.java.Result;
 import sd2223.trab1.api.java.Users;
+import sd2223.trab1.clients.FeedsClientFactory;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +20,12 @@ public class JavaUsers implements Users {
     private final Map<String,User> users = new ConcurrentHashMap<>();
 
     private static final Logger Log = Logger.getLogger(JavaUsers.class.getName());
+    Discovery discovery = Discovery.getInstance();
+    String domain;
+
+    public JavaUsers(String domain){
+        this.domain = domain;
+    }
 
     @Override
     public Result<String> createUser(User user) {
@@ -124,6 +133,11 @@ public class JavaUsers implements Users {
 
         // Delete user
         users.remove(name);
+
+        // Delete user feed
+        URI uri = discovery.knownUrisOf(domain + ":feeds", 1)[0];
+        var client = FeedsClientFactory.get(uri);
+        client.deleteFeed(name);
 
         return Result.ok(user);
     }

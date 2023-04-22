@@ -12,12 +12,11 @@ public class SoapUsersServer {
     public static final int PORT = 8081;
     private static final String USERS = ":users";
     public static String SERVER_BASE_URI = "http://%s:%s/soap";
-    private static Logger Log = Logger.getLogger(SoapUsersServer.class.getName());
+    private static final Logger Log = Logger.getLogger(SoapUsersServer.class.getName());
 
     public static void main(String[] args) throws Exception {
 
         String domain = args[0];
-        int base = Integer.parseInt(args[1]);
 
         String serviceName = domain + USERS;
 
@@ -27,7 +26,7 @@ public class SoapUsersServer {
             String serverURI = String.format(SERVER_BASE_URI, ip, PORT);
             Discovery discovery = Discovery.getInstance();
             discovery.announce(serviceName, serverURI);
-            Endpoint.publish(serverURI, new SoapFeedsWebService(domain, base));
+            Endpoint.publish(serverURI, new SoapUsersWebService(domain));
 
             Log.info(String.format("%s Soap Server ready @ %s\n", serviceName, serverURI));
 

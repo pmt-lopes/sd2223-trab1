@@ -9,9 +9,9 @@ import sd2223.trab1.api.User;
 @WebService(serviceName=UsersService.NAME, targetNamespace=UsersService.NAMESPACE, endpointInterface=UsersService.INTERFACE)
 public interface UsersService {
 
-	static final String NAME = "users";
-	static final String NAMESPACE = "http://sd2223";
-	static final String INTERFACE = "sd2223.trab1.api.soap.UsersService";
+	String NAME = "users";
+	String NAMESPACE = "http://sd2223";
+	String INTERFACE = "sd2223.trab1.api.soap.UsersService";
 
 	/**
 	 * Creates a new user identified by name.
@@ -24,7 +24,7 @@ public interface UsersService {
 	/**
 	 * Obtains the information on the user identified by name.
 	 * @param name name of the user
-	 * @param password password of the user
+	 * @param pwd password of the user
 	 * @throws UsersException otherwise
 	 */
 	@WebMethod
@@ -58,5 +58,8 @@ public interface UsersService {
 	 * @throws UsersException otherwise
 	 */
 	@WebMethod
-	List<User> searchUsers(String pattern) throws UsersException;	
+	List<User> searchUsers(String pattern) throws UsersException;
+
+	@WebMethod
+	Boolean hasUser(String name) throws UsersException;
 }
