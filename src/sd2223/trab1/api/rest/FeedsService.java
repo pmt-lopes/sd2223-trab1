@@ -13,6 +13,7 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import sd2223.trab1.api.Message;
 import sd2223.trab1.api.User;
+import sd2223.trab1.api.java.Result;
 
 @Path(FeedsService.PATH)
 public interface FeedsService {
@@ -147,9 +148,30 @@ public interface FeedsService {
 	 */
 	@DELETE
 	@Path("/{" + USER+ "}")
-	void deleteFeed(@PathParam(USER) String name, @QueryParam(PWD) String pwd);
+	void deleteFeed(@PathParam(USER) String name);
 
+	/**
+	 * Updates Feed with message from user
+	 * @param user
+	 * @param msg
+	 */
 	@POST
 	@Path("/sub/feed")
 	void updateFeedSubs(@QueryParam(USER) String user, Message msg);
+
+	/**
+	 * Add subscriber to followers list
+	 * @param user
+	 */
+	@POST
+	@Path("/subs/{" + USER + "}")
+	void addSubscriber(@PathParam(USER) String user, @QueryParam("sub") String sub);
+
+	/**
+	 * Remove subscriber from follower list
+	 * @param user
+	 */
+	@DELETE
+	@Path("/subs/{" + USER + "}")
+	void removeSubscriber(@PathParam(USER) String user, @QueryParam("sub") String sub);
 }

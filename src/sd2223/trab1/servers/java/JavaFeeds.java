@@ -13,9 +13,7 @@ import sd2223.trab1.clients.FeedsClientFactory;
 import sd2223.trab1.clients.UsersClientFactory;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
@@ -37,7 +35,7 @@ public class JavaFeeds implements Feeds {
 
     // May need to synchronise message post
     @Override
-    public Result<Long> postMessage(String user, String pwd, Message message) {
+    public synchronized Result<Long> postMessage(String user, String pwd, Message message) {
         Log.info("postMessage attempt by " + user);
 
         if(user==null || pwd == null || message == null){
@@ -83,7 +81,7 @@ public class JavaFeeds implements Feeds {
     }
 
     @Override
-    public Result<Void> removeFromPersonalFeed(String user, long mid, String pwd) {
+    public synchronized Result<Void> removeFromPersonalFeed(String user, long mid, String pwd) {
         Log.info("postMessage attempt by " + user);
 
         if(user == null || pwd == null){
@@ -113,6 +111,11 @@ public class JavaFeeds implements Feeds {
 
         Feed feed = feeds.get(userName);
 
+        if(feed == null){
+            Log.info("No user feed.");
+            throw new WebApplicationException(Status.NOT_FOUND);
+        }
+
         if(feed.getMessage(mid) == null){
             Log.info("No message with id " + mid);
             throw new WebApplicationException(Status.NOT_FOUND);
@@ -124,7 +127,7 @@ public class JavaFeeds implements Feeds {
     }
 
     @Override
-    public Result<Message> getMessage(String user, long mid) {
+    public synchronized Result<Message> getMessage(String user, long mid) {
         Log.info("getMessage from user " + user);
 
         if(user == null){
@@ -134,6 +137,13 @@ public class JavaFeeds implements Feeds {
 
         String[] userAux = user.split("@");
         String userName = userAux[0];
+
+        // Check if user is remote
+        if(!domain.equals(userAux[1])){
+            URI uri = discovery.knownUrisOf(userAux[1] + ":feeds",1)[0];
+            var client = FeedsClientFactory.get(uri);
+            return client.getMessage(user, mid);
+        }
 
         if(!userExists(userName, userAux[1])){
             Log.info("User does not exist");
@@ -154,12 +164,8 @@ public class JavaFeeds implements Feeds {
         return Result.ok(msg);
     }
 
-    // GetMessage local
-
-    // GetMessage remote
-
     @Override
-    public Result<List<Message>> getMessages(String user, long time) {
+    public synchronized Result<List<Message>> getMessages(String user, long time) {
         Log.info("getMessages from user " + user);
 
         if(user == null){
@@ -169,6 +175,13 @@ public class JavaFeeds implements Feeds {
 
         String[] userAux = user.split("@");
         String userName = userAux[0];
+
+        // Check if user is remote
+        if(!domain.equals(userAux[1])){
+            URI uri = discovery.knownUrisOf(userAux[1] + ":feeds",1)[0];
+            var client = FeedsClientFactory.get(uri);
+            return client.getMessages(user, time);
+        }
 
         var result = userExists(userName, userAux[1]);
 
@@ -186,13 +199,72 @@ public class JavaFeeds implements Feeds {
         return Result.ok(feed.getMessages(time));
     }
 
-    // GetMessages Local
+    @Override
+    public synchronized Result<Void> subUser(String user, String userSub, String pwd) {
+        Log.info(user + " is subscribing to " + userSub + "\n");
 
-    // GetMessages Remote
+        if(user == null || userSub == null || pwd == null){
+            Log.info("Null parameter.");
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        String[] userAux = user.split("@");
+        String[] userSubAux = userSub.split("@");
+        String userName = userAux[0];
+        String userSubName = userSubAux[0];
+
+        var result1 = userExists(userName, userAux[1]);
+        var result2 = userExists(userSubName, userSubAux[1]);
+
+        if(!result1 || !result2){
+            Log.info("One of the users does not exist");
+            throw new WebApplicationException(Status.NOT_FOUND);
+        }
+
+        var resultGet = getUser(userName, userAux[1], pwd);
+        if(resultGet == null){
+            Log.info("Password is incorrect.");
+            throw new WebApplicationException(Status.FORBIDDEN);
+        }
+
+        synchronized (this) {
+
+            Feed userFeed = feeds.get(userName);
+            if (userFeed == null) {
+                userFeed = new Feed();
+                feeds.put(userName, userFeed);
+            }
+            userFeed.subUser(userSub);
+
+            Log.info(user + " follows: " + userFeed.getUserSubs().toString() + "\n");
+
+            // remote userSub
+            if (!domain.equals(userSubAux[1])) {
+                Log.info("Sending addSubscriber request to " + userSub);
+                URI uri = discovery.knownUrisOf(userSubAux[1] + ":feeds", 1)[0];
+                var client = FeedsClientFactory.get(uri);
+                return client.addSubscriber(userSub, user);
+            }
+            else {
+                Feed userSubFeed = feeds.get(userSubName);
+                if (userSubFeed == null) {
+                    userSubFeed = new Feed();
+                    feeds.put(userSubName, userSubFeed);
+                }
+                userSubFeed.addFollower(user);
+
+
+                Log.info("Added " + user + " to " + userSub + "'s followers list\n");
+
+                Log.info(userSub + "'s subs: " + userSubFeed.getFollowers().toString() + "\n");
+            }
+        }
+        return Result.ok();
+    }
 
     @Override
-    public Result<Void> subUser(String user, String userSub, String pwd) {
-        Log.info(user + " is subscribing to " + userSub);
+    public synchronized Result<Void> unsubscribeUser(String user, String userSub, String pwd) {
+        Log.info(user + " is unsubscribing from " + userSub + "\n");
 
         if(user == null || userSub == null || pwd == null){
             Log.info("Null parameter.");
@@ -223,62 +295,31 @@ public class JavaFeeds implements Feeds {
             userFeed = new Feed();
             feeds.put(userName, userFeed);
         }
-        userFeed.subUser(userSub);
+        userFeed.unsubUser(userSub);
 
-        //ToDo remote userSub
+        // remote userSub
+        if(!domain.equals(userSubAux[1])){
+            Log.info("Sending removeSubscriber request to " + userSub);
+            URI uri = discovery.knownUrisOf(userSubAux[1] + ":feeds",1)[0];
+            var client = FeedsClientFactory.get(uri);
+            return client.removeSubscriber(userSub, user);
+        }
 
         Feed userSubFeed = feeds.get(userSubName);
         if (userSubFeed == null) {
             userSubFeed = new Feed();
             feeds.put(userSubName, userSubFeed);
         }
-        userSubFeed.addFollower(user);
-
-        return Result.ok();
-    }
-
-    @Override
-    public Result<Void> unsubscribeUser(String user, String userSub, String pwd) {
-        Log.info(user + " is unsubscribing from " + userSub);
-
-        if(user == null || userSub == null || pwd == null){
-            Log.info("Null parameter.");
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
-        }
-
-        String[] userAux = user.split("@");
-        String[] userSubAux = userSub.split("@");
-        String userName = userAux[0];
-        String userSubName = userSubAux[0];
-
-        var result1 = userExists(userName, userAux[1]);
-        var result2 = userExists(userSubName, userSubAux[1]);
-
-        if(!result1 || !result2){
-            Log.info("One of the users does not exist");
-            throw new WebApplicationException(Status.NOT_FOUND);
-        }
-
-        var resultGet = getUser(userName, userAux[1], pwd);
-        if(resultGet == null){
-            Log.info("Password is incorrect.");
-            throw new WebApplicationException(Status.FORBIDDEN);
-        }
-
-        //ToDo remote userSub
-
-        Feed userFeed = feeds.get(userName);
-        Feed userSubFeed = feeds.get(userSubName);
-
-        userFeed.unsubUser(userSub);
         userSubFeed.removeFollower(user);
 
+        Log.info("Removed " + user + " from " + userSub + "'s followers list\n");
+
         return Result.ok();
     }
 
     @Override
-    public Result<List<String>> listSubs(String user) {
-        Log.info("Listing subscribed users of " + user);
+    public synchronized Result<List<String>> listSubs(String user) {
+        Log.info("Listing subscribed users of " + user + "\n");
 
         if(user == null){
             Log.info("Null user.");
@@ -303,18 +344,69 @@ public class JavaFeeds implements Feeds {
         return Result.ok(feed.getUserSubs());
     }
 
+    // Function is called after user is deleted
+    // Request from user service in the same domain
     @Override
-    public Result<Void> deleteFeed(String user, String pwd) {
-        return null;
+    public synchronized Result<Void> deleteFeed(String user) {
+        Log.info("Deleting feed from user " + user + "\n");
+
+        feeds.remove(user);
+
+        return Result.ok();
     }
 
-    public Result<Void> updateFeedSubs(String user, Message msg){
+    // Function is called after user posts message
+    // Request from another domain
+    @Override
+    public synchronized Result<Void> updateFeedSubs(String user, Message msg){
+        Log.info("Propagating message from user " + user + "\n");
 
         List<Feed> list = new ArrayList<>(feeds.values());
         for(Feed feed: list){
             if(feed.getUserSubs().contains(user))
                 feed.postMessage(msg);
         }
+
+        return Result.ok();
+    }
+
+    //Function is called after sub subscribes to user
+    // Request from another domain
+    @Override
+    public synchronized Result<Void> addSubscriber(String user, String sub) {
+
+        String[] userAux = user.split("@");
+
+        synchronized (this) {
+            Feed userFeed = feeds.get(userAux[0]);
+            if (userFeed == null) {
+                userFeed = new Feed();
+                feeds.put(userAux[0], userFeed);
+            }
+            userFeed.addFollower(sub);
+
+            Log.info("Added " + sub + " to " + user + "'s followers list\n");
+            Log.info(user + "'s subs: " + userFeed.getFollowers().toString() + "\n");
+        }
+
+        return Result.ok();
+    }
+
+    //Function is called after sub unsubscribes to user
+    // Request from another domain
+    @Override
+    public synchronized Result<Void> removeSubscriber(String user, String sub) {
+
+        String[] userAux = user.split("@");
+
+        Feed userFeed = feeds.get(userAux[0]);
+        if (userFeed == null) {
+            userFeed = new Feed();
+            feeds.put(userAux[0], userFeed);
+        }
+        userFeed.removeFollower(sub);
+
+        Log.info("Removed " + sub + " to " + user + "'s followers list\n");
 
         return Result.ok();
     }
@@ -346,22 +438,26 @@ public class JavaFeeds implements Feeds {
     }
 
     private void propagateMessage(List<String> subs, String user, Message msg){
-        List<String> domains = new ArrayList<>();
         boolean hasLocalFollower = false;
+        Set<String> domains = new HashSet<>();
+
+        Log.info(user + "'s subs: " + subs.toString());
 
         // Get remote domains
-        // Adding the same domain multiple times?
         for(String sub: subs){
             String[] subAux = sub.split("@");
-            if(!domain.equals(subAux[1]))
+            if(!domain.equals(subAux[1])){
                 domains.add(subAux[1]);
-            else
+            }
+            else{
                 hasLocalFollower = true;
+            }
         }
 
         // Send to remote domains, 1 operation per domain
         for(String domain: domains){
             URI uri = discovery.knownUrisOf(domain + ":feeds",1)[0];
+            Log.info("Propagating " + user + "'s message to " + domain);
             var client = FeedsClientFactory.get(uri);
             client.updateFeedSubs(user, msg);
         }

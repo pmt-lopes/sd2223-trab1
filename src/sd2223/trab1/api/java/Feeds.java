@@ -20,7 +20,11 @@ public interface Feeds {
 
     Result<List<String>> listSubs(String user);
 
-    Result<Void> deleteFeed(String user, String pwd);
+    Result<Void> deleteFeed(String user);
 
     Result<Void> updateFeedSubs(String user, Message msg);
+
+    Result<Void> addSubscriber(String user, String sub);
+
+    Result<Void> removeSubscriber(String user, String sub);
 }

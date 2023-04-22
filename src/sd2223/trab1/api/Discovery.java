@@ -107,7 +107,7 @@ class DiscoveryImpl implements Discovery {
     @Override
     public URI[] knownUrisOf(String serviceName, int minEntries) {
 
-        Log.info(String.format("KnownUrisOf( serviceName: %s, minEntries: %s )\n", serviceName, minEntries));
+        //Log.info(String.format("KnownUrisOf( serviceName: %s, minEntries: %s )\n", serviceName, minEntries));
 
         for(;;) {
             var results = knownServices.get(serviceName);

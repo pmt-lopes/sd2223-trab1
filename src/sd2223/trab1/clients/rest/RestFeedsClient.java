@@ -106,10 +106,9 @@ public class RestFeedsClient extends RestClient implements Feeds {
         return super.toJavaResult(r, (Class<List<String>>)(Object)List.class);
     }
 
-    private Result<Void> clt_deleteFeed(String user, String pwd) {
+    private Result<Void> clt_deleteFeed(String user) {
 
         Response r = target.path(user)
-                .queryParam("pwd", pwd)
                 .request()
                 .accept(MediaType.APPLICATION_JSON)
                 .delete();
@@ -128,6 +127,30 @@ public class RestFeedsClient extends RestClient implements Feeds {
 
         return super.toJavaResult(r, Void.class);
 
+    }
+
+    private Result<Void> clt_addSubscriber(String user, String sub){
+
+        Response r = target.path("subs")
+                .path(user)
+                .queryParam("sub", sub)
+                .request()
+                .accept(MediaType.APPLICATION_JSON)
+                .post(Entity.entity(sub, MediaType.APPLICATION_JSON));
+
+        return super.toJavaResult(r, Void.class);
+    }
+
+    private Result<Void> clt_removeSubscriber(String user, String sub){
+
+        Response r = target.path("subs")
+                .path(user)
+                .queryParam("sub", sub)
+                .request()
+                .accept(MediaType.APPLICATION_JSON)
+                .delete();
+
+        return super.toJavaResult(r, Void.class);
     }
 
     @Override
@@ -166,12 +189,22 @@ public class RestFeedsClient extends RestClient implements Feeds {
     }
 
     @Override
-    public Result<Void> deleteFeed(String name, String pwd) {
-        return super.reTry( () -> clt_deleteFeed(name, pwd));
+    public Result<Void> deleteFeed(String name) {
+        return super.reTry( () -> clt_deleteFeed(name));
     }
 
     @Override
     public Result<Void> updateFeedSubs(String user, Message msg) {
         return super.reTry( () -> clt_updateFeedSubs(user, msg));
+    }
+
+    @Override
+    public Result<Void> addSubscriber(String user, String sub) {
+        return super.reTry( () -> clt_addSubscriber(user, sub));
+    }
+
+    @Override
+    public Result<Void> removeSubscriber(String user, String sub) {
+        return super.reTry( () -> clt_removeSubscriber(user, sub));
     }
 }
