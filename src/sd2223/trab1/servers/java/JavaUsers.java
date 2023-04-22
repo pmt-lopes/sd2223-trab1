@@ -5,6 +5,7 @@ import jakarta.ws.rs.core.Response;
 import sd2223.trab1.api.Discovery;
 import sd2223.trab1.api.User;
 import sd2223.trab1.api.java.Result;
+import sd2223.trab1.api.java.Result.ErrorCode;
 import sd2223.trab1.api.java.Users;
 import sd2223.trab1.clients.FeedsClientFactory;
 
@@ -34,13 +35,13 @@ public class JavaUsers implements Users {
         // Check if user data is valid
         if(user.getName() == null || user.getPwd() == null || user.getDisplayName() == null || user.getDomain() == null) {
             Log.info("User object invalid.");
-            throw new WebApplicationException( Response.Status.BAD_REQUEST );
+            return Result.error(ErrorCode.BAD_REQUEST);
         }
 
         // Insert user, checking if name already exists
         if( users.putIfAbsent(user.getName(), user) != null ) {
             Log.info("User already exists.");
-            throw new WebApplicationException( Response.Status.CONFLICT );
+            return Result.error(ErrorCode.CONFLICT);
         }
 
         return Result.ok(user.getName() + "@" + user.getDomain());
@@ -53,20 +54,20 @@ public class JavaUsers implements Users {
         // Check if user is valid
         if(name == null || pwd == null) {
             Log.info("Name or Password null.");
-            throw new WebApplicationException( Response.Status.BAD_REQUEST );
+            return Result.error(ErrorCode.BAD_REQUEST);
         }
 
         User user = users.get(name);
         // Check if user exists
         if( user == null ) {
             Log.info("User does not exist.");
-            throw new WebApplicationException( Response.Status.NOT_FOUND );
+            return Result.error(ErrorCode.NOT_FOUND);
         }
 
         //Check if the password is correct
         if( !user.getPwd().equals( pwd)) {
             Log.info("Password is incorrect.");
-            throw new WebApplicationException( Response.Status.FORBIDDEN );
+            return Result.error( ErrorCode.FORBIDDEN);
         }
 
         return Result.ok(user);
@@ -79,7 +80,7 @@ public class JavaUsers implements Users {
         // Check if parameters are valid
         if(!name.equals(user.getName())) {
             Log.info("Null parameter.");
-            throw new WebApplicationException( Response.Status.BAD_REQUEST );
+            return Result.error(ErrorCode.BAD_REQUEST);
         }
 
         var u = users.get(name);
@@ -87,13 +88,13 @@ public class JavaUsers implements Users {
         // Check if user exists
         if( u == null ) {
             Log.info("User does not exist.");
-            throw new WebApplicationException( Response.Status.NOT_FOUND );
+            return Result.error( ErrorCode.NOT_FOUND);
         }
 
         // Check if password is correct
         if( !u.getPwd().equals(pwd)) {
             Log.info("Password is incorrect.");
-            throw new WebApplicationException( Response.Status.FORBIDDEN );
+            return Result.error( ErrorCode.FORBIDDEN);
         }
         if(user.getPwd()==null)
             user.setPwd(u.getPwd());
@@ -114,7 +115,7 @@ public class JavaUsers implements Users {
         // Check if user is valid
         if(name == null || pwd == null) {
             Log.info("UserId or password null.");
-            throw new WebApplicationException( Response.Status.BAD_REQUEST );
+            return Result.error(ErrorCode.BAD_REQUEST);
         }
 
         var user = users.get(name);
@@ -122,13 +123,13 @@ public class JavaUsers implements Users {
         // Check if user exists
         if( user == null ) {
             Log.info("User does not exist.");
-            throw new WebApplicationException( Response.Status.NOT_FOUND );
+            return Result.error( ErrorCode.NOT_FOUND);
         }
 
         // Check if the password is correct
         if( !user.getPwd().equals(pwd)) {
             Log.info("Password is incorrect.");
-            throw new WebApplicationException( Response.Status.FORBIDDEN );
+            return Result.error( ErrorCode.FORBIDDEN);
         }
 
         // Delete user
@@ -170,7 +171,7 @@ public class JavaUsers implements Users {
 
         if( name == null ) {
             Log.info("User does not exist.");
-            throw new WebApplicationException( Response.Status.NOT_FOUND );
+            return Result.error( ErrorCode.NOT_FOUND);
         }
 
         Boolean result = users.containsKey(name);

@@ -1,8 +1,5 @@
 package sd2223.trab1.servers.java;
 
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.Response.Status;
 import sd2223.trab1.api.Discovery;
 import sd2223.trab1.api.Feed;
 import sd2223.trab1.api.Message;
@@ -40,7 +37,7 @@ public class JavaFeeds implements Feeds {
 
         if(user==null || pwd == null || message == null){
             Log.info("Null parameter.");
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+            return Result.error( Result.ErrorCode.BAD_REQUEST);
         }
 
         String[] userAux = user.split("@");
@@ -48,19 +45,19 @@ public class JavaFeeds implements Feeds {
 
         if (!userAux[1].equals(domain)) {
             Log.info("Incorrect domain");
-            throw new WebApplicationException(Status.BAD_REQUEST);
+            return Result.error( Result.ErrorCode.BAD_REQUEST);
         }
 
         if(!userExists(userName, userAux[1])){
             Log.info("User does not exist");
-            throw new WebApplicationException(Status.NOT_FOUND);
+            return Result.error( Result.ErrorCode.NOT_FOUND);
         }
 
         var result = getUser(userName, userAux[1], pwd);
 
         if(result == null){
             Log.info("Incorrect password.");
-            throw new WebApplicationException(Status.FORBIDDEN);
+            return Result.error( Result.ErrorCode.FORBIDDEN);
         }
 
         var feed = feeds.get(userName);
@@ -86,7 +83,7 @@ public class JavaFeeds implements Feeds {
 
         if(user == null || pwd == null){
             Log.info("Null parameter.");
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+            return Result.error( Result.ErrorCode.BAD_REQUEST);
         }
 
         String[] userAux = user.split("@");
@@ -94,31 +91,31 @@ public class JavaFeeds implements Feeds {
 
         if (!userAux[1].equals(domain)) {
             Log.info("Incorrect domain");
-            throw new WebApplicationException(Status.BAD_REQUEST);
+            return Result.error( Result.ErrorCode.BAD_REQUEST);
         }
 
         if(!userExists(userName, userAux[1])){
             Log.info("User does not exist");
-            throw new WebApplicationException(Status.NOT_FOUND);
+            return Result.error( Result.ErrorCode.NOT_FOUND);
         }
 
         var result = getUser(userName, userAux[1], pwd);
 
         if(result == null){
             Log.info("Incorrect password.");
-            throw new WebApplicationException(Status.FORBIDDEN);
+            return Result.error( Result.ErrorCode.FORBIDDEN);
         }
 
         Feed feed = feeds.get(userName);
 
         if(feed == null){
             Log.info("No user feed.");
-            throw new WebApplicationException(Status.NOT_FOUND);
+            return Result.error( Result.ErrorCode.NOT_FOUND);
         }
 
         if(feed.getMessage(mid) == null){
             Log.info("No message with id " + mid);
-            throw new WebApplicationException(Status.NOT_FOUND);
+            return Result.error( Result.ErrorCode.NOT_FOUND);
         }
 
         feed.removeMessage(mid);
@@ -132,7 +129,7 @@ public class JavaFeeds implements Feeds {
 
         if(user == null){
             Log.info("Null user.");
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+            return Result.error( Result.ErrorCode.BAD_REQUEST);
         }
 
         String[] userAux = user.split("@");
@@ -147,19 +144,19 @@ public class JavaFeeds implements Feeds {
 
         if(!userExists(userName, userAux[1])){
             Log.info("User does not exist");
-            throw new WebApplicationException(Status.NOT_FOUND);
+            return Result.error( Result.ErrorCode.NOT_FOUND);
         }
 
         Feed feed = feeds.get(userName);
         if (feed == null) {
             Log.info("Feed does not exist.");
-            throw new WebApplicationException(Status.NOT_FOUND);
+            return Result.error( Result.ErrorCode.NOT_FOUND);
         }
 
         Message msg = feed.getMessage(mid);
         if(msg == null) {
             Log.info("Message does not exist.");
-            throw new WebApplicationException(Status.NOT_FOUND);
+            return Result.error( Result.ErrorCode.NOT_FOUND);
         }
         return Result.ok(msg);
     }
@@ -170,7 +167,7 @@ public class JavaFeeds implements Feeds {
 
         if(user == null){
             Log.info("Null user.");
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+            return Result.error( Result.ErrorCode.BAD_REQUEST);
         }
 
         String[] userAux = user.split("@");
@@ -187,7 +184,7 @@ public class JavaFeeds implements Feeds {
 
         if(!result){
             Log.info("User does not exist");
-            throw new WebApplicationException(Status.NOT_FOUND);
+            return Result.error( Result.ErrorCode.NOT_FOUND);
         }
 
         Feed feed = feeds.get(userName);
@@ -205,7 +202,7 @@ public class JavaFeeds implements Feeds {
 
         if(user == null || userSub == null || pwd == null){
             Log.info("Null parameter.");
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+            return Result.error( Result.ErrorCode.BAD_REQUEST);
         }
 
         String[] userAux = user.split("@");
@@ -218,13 +215,13 @@ public class JavaFeeds implements Feeds {
 
         if(!result1 || !result2){
             Log.info("One of the users does not exist");
-            throw new WebApplicationException(Status.NOT_FOUND);
+            return Result.error( Result.ErrorCode.NOT_FOUND);
         }
 
         var resultGet = getUser(userName, userAux[1], pwd);
         if(resultGet == null){
             Log.info("Password is incorrect.");
-            throw new WebApplicationException(Status.FORBIDDEN);
+            return Result.error( Result.ErrorCode.FORBIDDEN);
         }
 
         synchronized (this) {
@@ -268,7 +265,7 @@ public class JavaFeeds implements Feeds {
 
         if(user == null || userSub == null || pwd == null){
             Log.info("Null parameter.");
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+            return Result.error( Result.ErrorCode.BAD_REQUEST);
         }
 
         String[] userAux = user.split("@");
@@ -281,13 +278,13 @@ public class JavaFeeds implements Feeds {
 
         if(!result1 || !result2){
             Log.info("One of the users does not exist");
-            throw new WebApplicationException(Status.NOT_FOUND);
+            return Result.error( Result.ErrorCode.NOT_FOUND);
         }
 
         var resultGet = getUser(userName, userAux[1], pwd);
         if(resultGet == null){
             Log.info("Password is incorrect.");
-            throw new WebApplicationException(Status.FORBIDDEN);
+            return Result.error( Result.ErrorCode.FORBIDDEN);
         }
 
         Feed userFeed = feeds.get(userName);
@@ -323,7 +320,7 @@ public class JavaFeeds implements Feeds {
 
         if(user == null){
             Log.info("Null user.");
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+            return Result.error( Result.ErrorCode.BAD_REQUEST);
         }
 
         String[] userAux = user.split("@");
@@ -332,7 +329,7 @@ public class JavaFeeds implements Feeds {
 
         if(!result){
             Log.info("User does not exist");
-            throw new WebApplicationException(Status.NOT_FOUND);
+            return Result.error( Result.ErrorCode.NOT_FOUND);
         }
 
         Feed feed = feeds.get(userName);
@@ -420,6 +417,10 @@ public class JavaFeeds implements Feeds {
         var result = client.getUser(name, pwd);
 
         if(result == null){
+            return null;
+        }
+
+        if(!result.isOK()){
             return null;
         }
 
